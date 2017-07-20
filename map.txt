@@ -1,0 +1,79 @@
+from,to,distance,color,parallel
+Vancouver,Seattle,1,0,1
+Vancouver,Calgary,3,0,0
+Seattle,Portland,1,0,1
+Seattle,Helena,6,1,0
+Seattle,Calgary,4,0,0
+Portland,San Francisco,5,54,1
+Portland,Salt Lake City,6,6,0
+San Francisco,Salt Lake City,5,32,1
+San Francisco,Los Angeles,3,41,1
+Calgary,Helena,4,0,0
+Calgary,Winnipeg,6,3,0
+Helena,Winnipeg,4,6,0
+Helena,Duluth,6,2,0
+Helena,Omaha,5,7,0
+Helena,Denver,4,5,0
+Helena,Salt Lake City,3,4,0
+Salt Lake City,Denver,3,17,1
+Salt Lake City,Las Vegas,3,2,0
+Las Vegas,Los Angeles,2,0,0
+Los Angeles,Phoenix,3,0,0
+Los Angeles,El Paso,6,8,0
+Phoenix,El Paso,3,0,0
+Phoenix,Santa Fe,3,0,0
+Phoenix,Denver,5,3,0
+El Paso,Houston,6,5,0
+El Paso,Dallas,4,7,0
+El Paso,Oklahoma City,5,1,0
+El Paso,Santa Fe,2,0,0
+Santa Fe,Oklahoma City,3,6,0
+Santa Fe,Denver,2,0,0
+Denver,Oklahoma City,4,7,0
+Denver,Kansas City,4,82,1
+Denver,Omaha,4,4,0
+Winnipeg,Sault St. Marie,6,0,0
+Winnipeg,Duluth,4,8,0
+Sault St. Marie,Montreal,5,8,0
+Sault St. Marie,Toronto,2,0,0
+Sault St. Marie,Duluth,3,0,0
+Duluth,Toronto,6,4,0
+Duluth,Chicago,3,7,0
+Duluth,Omaha,2,0,1
+Omaha,Chicago,4,6,0
+Omaha,Kansas City,1,0,1
+Kansas City,Saint Louis,2,64,1
+Kansas City,Oklahoma City,2,0,1
+Oklahoma City,Little Rock,2,0,0
+Oklahoma City,Dallas,2,0,1
+Dallas,Little Rock,2,0,0
+Dallas,Houston,1,0,1
+Houston,New Orleans,2,0,0
+New Orleans,Miami,6,7,0
+New Orleans,Atlanta,4,12,1
+New Orleans,Little Rock,3,5,0
+Little Rock,Saint Louis,2,0,0
+Little Rock,Nashville,3,3,0
+Miami,Charleston,4,4,0
+Miami,Atlanta,5,6,0
+Atlanta,Charleston,2,0,0
+Atlanta,Raleigh,2,0,1
+Atlanta,Nashville,1,0,0
+Nashville,Saint Louis,2,0,0
+Nashville,Pittsburgh,4,1,0
+Nashville,Raleigh,3,8,0
+Raleigh,Charleston,2,0,0
+Raleigh,Pittsburgh,2,0,0
+Raleigh,Washington,2,0,1
+Saint Louis,Pittsburgh,5,5,0
+Saint Louis,Chicago,2,35,1
+Chicago,Toronto,4,3,0
+Chicago,Pittsburgh,3,82,1
+Pittsburgh,Toronto,2,0,0
+Pittsburgh,New York,2,35,1
+Pittsburgh,Washington,2,0,0
+Washington,New York,2,82,1
+New York,Boston,2,17,1
+Montreal,Toronto,3,0,0
+Montreal,New York,3,6,0
+Montreal,Boston,2,0,1
