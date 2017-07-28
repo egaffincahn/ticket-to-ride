@@ -41,21 +41,7 @@ for i = 1:players
     if turn > players; turn = 1; end
 end
 
-% add up goal cards
-for turn = 1:3
-    goalpoints = 0;
-    H = G.taken;
-    H = rmedge(H, find(H.Edges.Weight ~= turn));
-    for i = 1:length(goals{turn})
-        outcome = goals{turn}{i}{3};
-        if isempty(shortestpath(H, goals{turn}{i}{1}, goals{turn}{i}{2}))
-            outcome = -outcome;
-        end
-        goalpoints = goalpoints + outcome;
-    end
-    points(turn) = points(turn) + goalpoints;
-end
-
-% add up longest road
+points = points + addgoalcards(G, goals);
+points = points + addlongestroad(G, players);
 
 [~, winner] = max(points);
