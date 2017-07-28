@@ -49,7 +49,7 @@ for turn = 1:3
     for i = 1:length(goals{turn})
         outcome = goals{turn}{i}{3};
         if isempty(shortestpath(H, goals{turn}{i}{1}, goals{turn}{i}{2}))
-            outcome = -goals{turn}{i}{3};
+            outcome = -outcome;
         end
         goalpoints = goalpoints + outcome;
     end
