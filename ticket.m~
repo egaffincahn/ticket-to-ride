@@ -42,10 +42,9 @@ for i = 1:players
     % they should lay down longest they have because it's almost over
     [G, hand, deck, faceup, discards, goals, goalcards, pieces, points] = doturn(turn, G, hand, deck, faceup, discards, goals, goalcards, pieces, points, s);
     turn = turn + 1;
-    if turn > players; turn = 1; end % back around the table
+    if turn > players; turn = 1; end % 
 end
 
-% add up the points awarded for completing a goal card and longest road
 points = points + addgoalcards(G, goals, players);
 points = points + addlongestroad(G, players);
 
