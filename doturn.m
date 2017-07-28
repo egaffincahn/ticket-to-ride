@@ -1,4 +1,4 @@
-function [G, hand, deck, faceup, discards, goals, goalcards, pieces, points] = doturn(turn, G, hand, deck, faceup, discards, goals, goalcards, pieces, points, s)
+function [G, cards, goals, goalcards, pieces, points] = doturn(turn, G, cards, goals, goalcards, pieces, points, s)
 
 edgevals = valuateedges(G, goals);
 turnover = false; % whether a track has been placed (when turn is over)
@@ -11,10 +11,10 @@ while ~turnover
     
     if value < 2 && ~anyhavevalue % pick new goal cards, exciting!
         [goals{turn}, goalcards] = pickgoals(goals{turn}, goalcards, s);
-    elseif value > 10 || length(hand{turn}) > (110-30)/length(hand)
+    elseif value > 10 || length(cards.hand{turn}) > (110-30)/length(cards.hand)
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
-        [colorcounts, colorindices] = hist(hand{turn}, 0:8); % how many of each color does player have
+        [colorcounts, colorindices] = hist(cards.hand{turn}, 0:8); % how many of each color does player have
         needed = G.distance.Edges.Weight(pick); % cards needed for the distance
         
         % figure out how many of the color(s) needed are in hand
@@ -45,12 +45,12 @@ while ~turnover
         
         % check hand against how many are needed
         if inhand >= G.distance.Edges.Weight(pick) && pieces(turn) >= G.distance.Edges.Weight(pick) % yay, laying a track!
-            ind = find(hand{turn} == choicecolor, needed, 'first'); % indices of the first N cards of the color to use
-            [G, hand, deck, faceup, discards, pieces, points] = laytrack(G, turn, pick, hand, deck, faceup, discards, ind, pieces, points);
+            ind = find(cards.hand{turn} == choicecolor, needed, 'first'); % indices of the first N cards of the color to use
+            [G, cards, pieces, points] = laytrack(G, turn, pick, cards, ind, pieces, points);
             turnover = true;
         else % don't have enough with standard colors
-            if value > 15 && sum(inhand | hand{turn}==0) > needed && ~usewild % if have enough cards including the wilds and value is high and this is the max value (only do this once)
-                wilds = find(hand{turn} == 0);
+            if value > 15 && sum(inhand | cards.hand{turn}==0) > needed && ~usewild % if have enough cards including the wilds and value is high and this is the max value (only do this once)
+                wilds = find(cards.hand{turn} == 0);
                 ind = [find(inhand), wilds(1:length(needed)-sum(inhand))];
                 usewild = true; % only use wild on best
             end
@@ -58,10 +58,10 @@ while ~turnover
             anyhavevalue = true;
         end
     elseif usewild % value of must current choice is medium/low but there's another with high value worth using wilds on
-        [G, hand, deck, faceup, discards, pieces, points] = laytrack(G, turn, pick, hand, deck, faceup, discards, ind, pieces, points);
+        [G, cards, pieces, points] = laytrack(G, turn, pick, cards, ind, pieces, points);
         turnover = true;
     else % taking cards yay
-        [hand, deck, faceup, discards] = pickcards(turn, hand, deck, faceup, discards, s);
+        cards = pickcards(turn, cards, s);
         turnover = true;
     end
 end

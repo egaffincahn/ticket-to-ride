@@ -13,11 +13,14 @@ G = initializemap;
 
 pieces = 45 * ones([players, 1]); % number of trains each player has
 points = zeros([1, players]); % initialize everyone to 0 points
-deck = Shuffle([zeros([1, 14]), repmat(1:8, [1, 12])]); % initialize and shuffle the deck!
-[~, deck, faceup, discards] = movecards([], [], deck, [], [], 'deck', 'faceup', 1:5); % put first 5 face up
-hand = cell(1, players); % initialize the cards each player has
+cards = struct();
+cards.deck = Shuffle([zeros([1, 14]), repmat(1:8, [1, 12])]); % initialize and shuffle the deck!
+cards.hand = cell(1, players); % initialize each players cards as empty cell
+cards.faceup =  [];
+cards.discards = [];
+cards = movecards([], cards, 'deck', 'faceup', 1:5); % put first 5 face up
 for turn = 1:players
-    [hand, deck, ~, discards] = movecards(turn, hand, deck, [], discards, 'deck', 'hand', 1:4);
+    cards = movecards(turn, cards, 'deck', 'hand', 1:4);
 end
 
 goalcards = importgoals; % read goal cards in from the txt file
@@ -32,7 +35,7 @@ end
 
 turn = 1; % indicates player whose turn it is
 while all(pieces > 2) % go until someone has 2 or fewer pieces
-    [G, hand, deck, faceup, discards, goals, goalcards, pieces, points] = doturn(turn, G, hand, deck, faceup, discards, goals, goalcards, pieces, points, s);
+    [G, cards, goals, goalcards, pieces, points] = doturn(turn, G, cards, goals, goalcards, pieces, points, s);
     turn = turn + 1;
     if turn > players; turn = 1; end
 end
@@ -40,7 +43,7 @@ end
 
 for i = 1:players
     % they should lay down longest they have because it's almost over
-    [G, hand, deck, faceup, discards, goals, goalcards, pieces, points] = doturn(turn, G, hand, deck, faceup, discards, goals, goalcards, pieces, points, s);
+    [G, cards, goals, goalcards, pieces, points] = doturn(turn, G, cards, goals, goalcards, pieces, points, s);
     turn = turn + 1;
     if turn > players; turn = 1; end % back around the table
 end

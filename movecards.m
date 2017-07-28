@@ -1,37 +1,38 @@
-function [hand, deck, faceup, discards] = movecards(turn, hand, deck, faceup, discards, from, to, ind)
+function cards = movecards(turn, cards, from, to, ind)
 
 switch from
     case 'faceup' % to hand, discards
-        cards = faceup(ind); % take card from faceup
-        faceup(ind) = [];
-        [hand, deck, faceup, discards] = movecards(turn, hand, deck, faceup, discards, 'deck', 'faceup', 1:length(ind)); % replace it with one from deck
+        cards2move = cards.faceup(ind); % take card from faceup
+        cards.faceup(ind) = [];
+        cards = movecards(turn, cards, 'deck', 'faceup', 1:length(ind)); % replace it with one from deck
     case 'deck' % to hand, faceup
-        cards = 99*ones(1,length(ind));
+        cards2move = 99*ones(1,length(ind));
         for i = 1:length(ind) % just do one card at a time so we can shuffle discards back in
-            if isempty(deck)
-                [hand, deck, faceup, discards] = movecards(turn, hand, deck, faceup, discards, 'discards', 'deck', 1:length(discards));
+            if isempty(cards.deck)
+                cards = movecards(turn, cards, 'discards', 'deck', 1:length(cards.discards));
             end
-            cards(i) = deck(1);
-            deck(1) = [];
+            cards2move(i) = cards.deck(1);
+            cards.deck(1) = [];
         end
     case 'hand' % to discards
-        cards = hand{turn}(ind);
-        hand{turn}(ind) = [];
+        cards2move = cards.hand{turn}(ind);
+        cards.hand{turn}(ind) = [];
     case 'discards' % to deck
-        cards = discards(ind);
-        discards = [];
+        cards2move = cards.discards(ind);
+        cards.discards = [];
 end
 
 switch to
     case 'hand'
-        hand{turn} = [hand{turn}, cards];
+        cards.hand{turn} = [cards.hand{turn}, cards2move];
     case 'faceup'
-        faceup = [faceup, cards];
-        if sum(~faceup) >= 3 % if there are too many
-            [hand, deck, faceup, discards] = movecards(turn, hand, deck, faceup, discards, 'faceup', 'discards', 1:length(faceup));
+        cards.faceup = [cards.faceup, cards2move];
+        if sum(~cards.faceup) >= 3 % if there are too many
+            cards = movecards(turn, cards, 'faceup', 'discards', 1:length(cards.faceup));
         end
     case 'discards'
-        discards = [discards, cards];
+        cards.discards = [cards.discards, cards2move];
     case 'deck'
-        deck = cards;
+        cards.deck = cards2move;
 end
+
