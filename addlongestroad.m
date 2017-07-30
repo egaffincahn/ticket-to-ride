@@ -1,6 +1,8 @@
-function points = addlongestroad(G, players)
+% should unit test this
 
-best_dist = zeros([1, players]);
+function [points, bestdist] = addlongestroad(G, players)
+
+bestdist = zeros([1, players]);
 for turn = 1:players
     
     H = G.distance;
@@ -13,11 +15,11 @@ for turn = 1:players
         % one
         search = H.Nodes.Name(dfsearch(H, H.Nodes.Name(i)));
         dist = 0; % total distance of this path so far
-        if length(search) == 1 % city not connected to any others
+        if length(search) < -1 % city connected to fewer than X cities, don't even bother
             continue
         end
         for j = 1:length(search)
-            if j == length(search) && length(search) == 2 % if only two cities, don't wrap around
+            if length(search) == 2 && j == length(search) % don't include the second the same reverse trip
                 continue
             elseif j == length(search) % check if the first and last cities are connected
                 wrap = 1;
@@ -28,18 +30,13 @@ for turn = 1:players
             if ind == 0 % if they're not connected
                 continue
             end
-            temp_dist = H.Edges.Weight(ind); % get the weight of the edge
-            if temp_dist == 0 % if the weight is 0, not sure this ever happens...?
-                continue
-            end
-            dist = dist + temp_dist; % increase the track length
+            dist = dist + H.Edges.Weight(ind); % increase the track length
         end
-        if dist > best_dist % new best track length for this player
-            best_dist(turn) = dist;
+        if dist > bestdist(turn) % new best track length for this player
+            bestdist(turn) = dist;
         end
     end
 end
 
-[~, player] = max(best_dist); % find the player with the best
-points = zeros(size(best_dist));
-points(player) = 10; % and give them 10 points!
+longest = max(bestdist); % find the value of the longest
+points = 10 * (longest == bestdist); % get player(s) with longest, give them all 10!
