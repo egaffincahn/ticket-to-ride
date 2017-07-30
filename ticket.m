@@ -7,7 +7,7 @@ s = struct();
 if nargin < 1 || isempty(players) % assume 3 players in the game
     players = 3;
 end
-assert(players >= 3 && players <= 5, 'Must be between 3-5 players')
+assert(players >= 2 && players <= 5, 'Must be between 2-5 players')
 
 G = initializemap;
 
