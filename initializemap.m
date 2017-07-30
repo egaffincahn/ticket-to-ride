@@ -1,13 +1,13 @@
 function G = initializemap()
 
 map = importmap;
-[G.taken, G.distance, G.points, G.color, G.parallel, G.weighted] = deal(graph(map.from, map.to, 0));
-G.distance.Edges.Weight = map.distance;
-G.color.Edges.Weight = map.color;
-G.parallel.Edges.Weight = map.parallel;
-G.points.Edges.Weight = calcpoints(map.distance);
-G.weighted.Edges.Weight = map.distance ./ calcpoints(map.distance);
-
+G.taken = graph(map.from, map.to, 0);
+G.turns = graph(map.from, map.to, 1);
+G.distance = graph(map.from, map.to, map.distance);
+G.color = graph(map.from, map.to, map.color);
+G.parallel = graph(map.from, map.to, map.parallel);
+G.points = graph(map.from, map.to, calcpoints(map.distance));
+G.weighted = graph(map.from, map.to, map.distance ./ calcpoints(map.distance));
 
 function points = calcpoints(distances)
 
