@@ -10,11 +10,11 @@
 
 %#ok<*AGROW>
 
-function [points, bestdist] = addlongestroad(G, players)
+function [points, bestdist] = addlongestroad(G, info)
 
-bestdist = zeros([1, players]); % initialize each player's longest at 0
+bestdist = zeros([1, info.players]); % initialize each player's longest at 0
 
-for turn = 1:players
+for turn = 1:info.players
     
     H = G.distance; % use the graph of track distances to calculate longest track
     H = rmedge(H, find(G.taken.Edges.Weight ~= turn)); % remove all the edges where this player didn't go

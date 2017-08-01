@@ -6,10 +6,14 @@
 %       -if someone is collecting a lot of a color and you need that color
 %   -gather gather gather until some point and then spend at some rate
 % -how to valuate different edges
-%   -minimize distance
-%   -maximize points
-%   -ratio points:distance (high=hard) or (low=easy)
-%   -based on valuation of other players' moves
+%   -criteria
+%       -minimize distance
+%       -maximize points
+%       -ratio points:distance (high=hard) or (low=easy)
+%       -based on valuation of other players' moves
+%   -finding paths
+%       -just based on goals alone
+%       -
 % -how aggressive to be when discarding goal cards
 %   -keep all
 %   -keep one easy, one hard
@@ -36,6 +40,7 @@
 %   -others' pieces left
 %   -color you need being taken
 %   -your valued tracks are taken
+% -what to do when all goals are completed
 % -endgame
 %   -when to prepare for endgame
 %   -calculate number of turns needed
