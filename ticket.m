@@ -14,6 +14,7 @@ G = initializemap;
 info.pieces = 45 * ones([players, 1]); % number of trains each player has
 info.points = zeros([1, players]); % initialize everyone to 0 points
 info.players = players;
+info.rounds = 0;
 
 cards = struct();
 cards.deck = Shuffle([zeros([1, 14]), repmat(1:8, [1, 12])]); % initialize and shuffle the deck!
@@ -40,6 +41,7 @@ while all(info.pieces > 2) % go until someone has 2 or fewer pieces
     [G, cards, info] = doturn(turn, G, cards, info, s);
     turn = turn + 1;
     if turn > players; turn = 1; end
+    info.rounds = info.rounds + 1;
 end
 
 
@@ -48,6 +50,7 @@ for i = 1:players
     [G, cards, info] = doturn(turn, G, cards, info, s);
     turn = turn + 1;
     if turn > players; turn = 1; end % back around the table
+    info.rounds = info.rounds + 1;
 end
 
 % add up the points awarded for completing a goal card and longest road
@@ -55,5 +58,9 @@ info.points = info.points + addgoalcards(G, cards, info);
 info.points = info.points + addlongestroad(G, info);
 
 [~, winner] = max(info.points);
+
+for turn = 1:players
+    assert(45 - sum(G.distance.Edges.Weight(G.taken.Edges.Weight == turn)) == info.pieces(turn), 'Incorrect pieces remaining')
+end
 
 keyboard
