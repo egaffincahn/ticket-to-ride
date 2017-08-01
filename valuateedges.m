@@ -1,41 +1,31 @@
 function edgevals = valuateedges(turn, G, cards, info, s)
 
-% IF BEST IS TAKEN, NEED TO FIND A NEW ROUTE
 
 edgevals = zeros([size(G.distance.Edges, 1), 1]);
 H = G.distance;
-H.Edges.Weight(find(G.taken.Edges.Weight)) = Inf;
-% H = rmedge(H, find(G.taken.Edges.Weight)); % remove all the edges where this player didn't go
+H.Edges.Weight(find(G.taken.Edges.Weight)) = Inf; %#ok<FNDSB>
 
 for i = 1:length(cards.playergoals{turn})
-    [~, completed] = addgoalcards(G, cards, info);
+    [~, completed] = addgoalcards(G, cards, info); % check if the goal was completed
     if completed{turn}(i)
         continue
     end
-    % shortest path needs to test from all cities that are connected to all
-    % that are connected to both cities in the goal
-    
-    
-    playergraph = rmedge(G.distance, find(G.taken.Edges.Weight ~= turn));
-    connectionmatrix = distances(playergraph);
-    ind1 = findnode(H, cards.playergoals{turn}{i}{1});
-    connected1 = find(connectionmatrix(:,ind1) ~= 0 & ~isinf(connectionmatrix(:,ind1)))';
-    ind2 = findnode(H, cards.playergoals{turn}{i}{2});
-    connected2 = find(connectionmatrix(:,ind2) ~= 0 & ~isinf(connectionmatrix(:,ind2)))';
-    availablegraph = rmedge(G.distance, find(G.taken.Edges.Weight ~= 0));
-    % definitely a faster way to do this:
-    bestdistance = Inf;
-    for city1 = [ind1 connected1]
-        for city2 = [ind2 connected2]
-            [path, distance] = shortestpath(availablegraph, city1, city2);
-            if distance < bestdistance
-                bestpath = path;
-                bestdistance = distance;
-            end
-        end
+
+    % Will be one strategy. Logic: For each city in the goal card, get all
+    % the cities connected to it. Then find the best route from any city on
+    % one side of the goal card to any city connected to the other side.
+    playergraph = rmedge(G.distance, find(G.taken.Edges.Weight ~= turn)); % get a smaller graph with only the cities connected
+    for j = 1:2 % scroll through each city in the goal
+        tree = shortestpathtree(playergraph, cards.playergoals{turn}{i}{j}, 'OutputForm', 'cell'); % get all the cities the goal city is connected to
+        connected{j} = findnode(H, unique([tree{:}])); % get the indices of the connected cities
     end
-    ind = findedge(H, bestpath(1:end-1), bestpath(2:end));
-    edgevals(ind) = edgevals(ind) + 1;
+    numpossible = length(connected{1}) * length(connected{2}); % 
+    connectionmatrix = distances(H); % get the connection matrix of all the cities with taken tracks as Inf
+    [~, ind] = min(reshape(connectionmatrix(connected{1}, connected{2}), [1 numpossible])); % get the best route from any on one side to any on the other
+    [closest1, closest2] = ind2sub([length(connected{1}) length(connected{2})], ind); % get the subscripts - the closest cities on each side
+    bestpath = shortestpath(H, connected{1}(closest1), connected{2}(closest2)); % get the best path
+    edges = findedge(H, bestpath(1:end-1), bestpath(2:end)); % the indices of the cities on that best path
+    edgevals(edges) = edgevals(edges) + 1; % increase the value of those edges
     
 end
 
