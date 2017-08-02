@@ -1,7 +1,7 @@
-function cards = pickcards(turn, G, edgevals, cards, s)
+function cards = pickcards(turn, G, memory, cards, s)
 
 picked = 0;
-colorvals = valuatecolors(G, edgevals); % returns values for each color 1-8
+colorvals = valuatecolors(G, memory(turn).edgevals); % returns values for each color 1-8
 colorvals = colorvals / sum(colorvals);
 while picked < 2
     [value, pick] = max(colorvals); % find the highest valued color

@@ -2,14 +2,14 @@ function winner = ticket(players)
 
 rng(1)
 
-s = struct();
-
 if nargin < 1 || isempty(players) % assume 3 players in the game
     players = 2;
 end
 assert(players >= 2 && players <= 5, 'Must be between 2-5 players')
 
 G = initializemap;
+
+s = strategy(players);
 
 info.pieces = 45 * ones([players, 1]); % number of trains each player has
 info.points = zeros([1, players]); % initialize everyone to 0 points
@@ -37,20 +37,25 @@ for turn = 1:players
 end
 
 turn = 1; % indicates player whose turn it is
+memory = struct('taken', cellfun(@(x) G.taken, cell(1, players), 'UniformOutput', false));
 while all(info.pieces > 2) % go until someone has 2 or fewer pieces
-    [G, cards, info] = doturn(turn, G, cards, info, s);
+    [G, cards, info, memory] = doturn(turn, G, cards, info, memory, s);
     turn = turn + 1;
-    if turn > players; turn = 1; end
-    info.rounds = info.rounds + 1;
+    if turn > players
+        turn = 1;
+        info.rounds = info.rounds + 1;
+    end
 end
 
 
 for i = 1:players
     % they should lay down longest they have because it's almost over
-    [G, cards, info] = doturn(turn, G, cards, info, s);
+    [G, cards, info, memory] = doturn(turn, G, cards, info, memory, s);
     turn = turn + 1;
-    if turn > players; turn = 1; end % back around the table
-    info.rounds = info.rounds + 1;
+    if turn > players % back around the table
+        turn = 1;
+        info.rounds = info.rounds + 1;
+    end
 end
 
 % add up the points awarded for completing a goal card and longest road
@@ -63,4 +68,4 @@ for turn = 1:players
     assert(45 - sum(G.distance.Edges.Weight(G.taken.Edges.Weight == turn)) == info.pieces(turn), 'Incorrect pieces remaining')
 end
 
-keyboard
+% keyboard

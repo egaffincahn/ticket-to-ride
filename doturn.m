@@ -1,20 +1,26 @@
-function [G, cards, info] = doturn(turn, G, cards, info, s)
+function [G, cards, info, memory] = doturn(turn, G, cards, info, memory, s)
 
 % plotgraph(turn, G, cards, info)
 
-edgevals = valuateedges(turn, G, cards, info, s);
+if ~all(memory(turn).taken.Edges.Weight == G.taken.Edges.Weight) || info.rounds == 0 % only valuate edges if something changed
+    memory(turn).edgevals = valuateedges(turn, G, cards, info, s);
+end
+edgevals_temp = memory(turn).edgevals; % create temporary duplicate to delete certain edges if player doesn't have the cards for them
 turnover = false; % whether a track has been placed (when turn is over)
 usewild = false; % pick is valued high enough to warrant using wildcards
 anyhavevalue = false; % whether any track has high enough value to place
+beta = [-1 .02 .1 .2];
 
 while ~turnover
     
-    [value, pick] = max(edgevals); % find the highest valued track
+    [value, pick] = max(edgevals_temp); % find the highest valued track
+    logistic = [1, length(cards.hand{turn}), value, info.players];
     
     if value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
-    elseif value > 10 || length(cards.hand{turn}) > (110-30)/length(cards.hand) && value > 0
+    elseif (1 / (1 + exp(-beta * logistic'))) > rand
+%     elseif value > 10 || length(cards.hand{turn}) > (110-30)/length(cards.hand) && value > 0
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
         [colorcounts, colorindices] = hist(cards.hand{turn}, 0:8); % how many of each color does player have
@@ -57,14 +63,14 @@ while ~turnover
                 ind = [find(inhand), wilds(1:length(needed)-sum(inhand))];
                 usewild = true; % only use wild on best
             end
-            edgevals(pick) = 0; % set the pick's value to 0 so we don't choose it again
+            edgevals_temp(pick) = -1; % set the pick's value to -1 so we don't choose it again
             anyhavevalue = true;
         end
     elseif usewild % value of must current choice is medium/low but there's another with high value worth using wilds on
         [G, cards, info] = laytrack(G, turn, pick, cards, ind, info);
         turnover = true;
     else % taking cards yay
-        cards = pickcards(turn, G, edgevals, cards, s);
+        cards = pickcards(turn, G, memory, cards, s);
         turnover = true;
     end
 end

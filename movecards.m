@@ -6,7 +6,7 @@ switch from
         cards.faceup(ind) = [];
         cards = movecards(turn, cards, 'deck', 'faceup', 1:length(ind)); % replace it with one from deck
     case 'deck' % to hand, faceup
-        cards2move = 99*ones(1,length(ind));
+        cards2move = -ones(1,length(ind)); % initialize them at -1 as placeholders
         for i = 1:length(ind) % just do one card at a time so we can shuffle discards back in
             if isempty(cards.deck)
                 cards = movecards(turn, cards, 'discards', 'deck', 1:length(cards.discards));

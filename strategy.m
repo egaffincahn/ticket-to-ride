@@ -51,3 +51,15 @@
 %   -only most recent
 %   -all
 %   -some combination, but stochastic
+
+
+function s = strategy(players)
+
+valuation = struct();
+valuation.goalpriorities = 'equal';
+valuation.routeminimizer = 'distance';
+valuation.iterativevaluation = false;
+valuation.attemptoverlap = false;
+
+s = struct('valuation', cellfun(@(x) valuation, cell(1, players), 'UniformOutput', false));
+

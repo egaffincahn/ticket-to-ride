@@ -1,11 +1,12 @@
-function [G, cards, info] = laytrack(G, turn, pick, cards, ind, info)
+function [G, cards, info, memory] = laytrack(G, turn, pick, cards, ind, info, memory)
 
 info.pieces(turn) = info.pieces(turn) - G.distance.Edges.Weight(pick);
 info.points(turn) = info.points(turn) + G.points.Edges.Weight(pick);
 G.taken.Edges.Weight(pick) = turn;
 cards = movecards(turn, cards, 'hand', 'discards', ind);
+% memory.revaluate = num2cell(true(1, players));
 
-% fprintf('\n\n\n')
+% fprintf('\n\n')
 % G.taken.Edges(pick,:)
 % [info.pieces'; info.points]
 

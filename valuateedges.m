@@ -34,11 +34,7 @@ available = sum(~G.taken.Edges.Weight);
 urgency = 1 + 20 * log(numedges(H) / available);
 edgevals = edgevals * urgency;
 
-edgevals(find(G.taken.Edges.Weight)) = 0; %#ok<FNDSB>
-
-
-%%
-return
+edgevals(find(G.taken.Edges.Weight)) = -1; %#ok<FNDSB>
 
 
 % which goal to prioritize
