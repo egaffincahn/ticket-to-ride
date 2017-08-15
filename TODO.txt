@@ -1,0 +1,11 @@
+-general strategy
+-endgame plan
+-plotting
+
+
+
+
+REMAINING FROM MONDAY 8/14
+-Does completed actually work???
+    Test: as is, ticket(2)
+-Not totally sure the basic valuation strategy is working

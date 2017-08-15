@@ -59,7 +59,7 @@ valuation = struct();
 valuation.goalpriorities = 'equal';
 valuation.routeminimizer = 'distance';
 valuation.iterativevaluation = false;
-valuation.attemptoverlap = false;
+valuation.attemptoverlap = true;
 
 s = struct('valuation', cellfun(@(x) valuation, cell(1, players), 'UniformOutput', false));
 

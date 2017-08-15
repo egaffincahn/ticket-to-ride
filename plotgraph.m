@@ -15,7 +15,9 @@ playerspots = [... % subplot indices
     81 91; ...
     21 31];
 
+%% individual player info
 longestroadpoints = addlongestroad(G, info);
+[~, completed] = addgoalcards(G, cards, info); % check if the goal was completed
 for player = 1:info.players
     subplot(12,10,playerspots(player,:))
     yspread = .25; if player == 1; yspread = yspread * 2; end
@@ -25,7 +27,12 @@ for player = 1:info.players
     ypos = ypos - yspread;
     yspread = yspread / 1.5;
     for goal = 1:length(cards.playergoals{player})
-        text(0, ypos, sprintf('%s - %s', cards.playergoals{player}{goal}{1}, cards.playergoals{player}{goal}{2}))
+        if completed{turn}(goal)
+            completion = '[COMPLETED]';
+        else
+            completion = '';
+        end
+        text(0, ypos, sprintf('%s - %s %s', cards.playergoals{player}{goal}{1}, cards.playergoals{player}{goal}{2}, completion))
         ypos = ypos - yspread;
     end
     if player == turn
@@ -36,8 +43,9 @@ for player = 1:info.players
     end
 end
 
+%% general text at bottom
 subplot(12,10,101:120)
-text(0, 1, sprintf('%d cards in deck', length(cards.deck)), 'FontSize', 14)
+text(0, 1, sprintf('%d cards in deck, %d cards in discard', length(cards.deck), length(cards.discards)), 'FontSize', 14)
 text(0, .75, [sprintf('%d ', info.points) 'track points'])
 text(0, .50, [sprintf('%d ', longestroadpoints) 'longest points'])
 text(0, .25, [sprintf('%d ', info.points+longestroadpoints) 'total points'], 'FontSize', 14)
@@ -68,3 +76,5 @@ end
 
 %%
 drawnow
+
+

@@ -11,6 +11,7 @@ switch from
             if isempty(cards.deck)
                 cards = movecards(turn, cards, 'discards', 'deck', 1:length(cards.discards));
             end
+            assert(~isempty([cards.deck, cards.discards]), 'Uh oh... not enough cards.')
             cards2move(i) = cards.deck(1);
             cards.deck(1) = [];
         end
