@@ -9,17 +9,16 @@ edgevals_temp = memory(turn).edgevals; % create temporary duplicate to delete ce
 turnover = false; % whether a track has been placed (when turn is over)
 usewild = false; % pick is valued high enough to warrant using wildcards
 anyhavevalue = false; % whether any track has high enough value to place
-beta = [-1 .05 .001 .2];
 
 while ~turnover
     
     [value, pick] = max(edgevals_temp); % find the highest valued track
-    considerations = [1, length(cards.hand{turn}), value, info.players];
+%     considerations = [1, length(cards.hand{turn}), value, info.players];
     
     if value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15) % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
-    elseif (1 / (1 + exp(-beta * considerations'))) > rand
+    elseif logisticvaluation(length(cards.hand{turn}), value, info.players) > rand %elseif (1 / (1 + exp(-beta * considerations'))) > rand
 %     elseif value > 10 || length(cards.hand{turn}) > (110-30)/length(cards.hand) && value > 0
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
@@ -58,22 +57,24 @@ while ~turnover
             [G, cards, info] = laytrack(G, turn, pick, cards, ind, info);
             turnover = true;
         else % don't have enough with standard colors
-            if value > 15 && sum(inhand | cards.hand{turn}==0) > needed && ~usewild % if have enough cards including the wilds and value is high and this is the max value (only do this once)
-                wilds = find(cards.hand{turn} == 0);
-                ind = [find(inhand), wilds(1:length(needed)-sum(inhand))];
+            if value > 15 && inhand + sum(cards.hand{turn}==0) >= needed && ~usewild % if have enough cards including the wilds and value is high and this is the max value (only do this once)
+                colorcards = find(cards.hand{turn} == choicecolor); wilds = find(cards.hand{turn} == 0); cardspossible = [colorcards, wilds];%wilds = find(cards.hand{turn} == 0);
+                ind = cardspossible(1:needed); %ind = [find(inhand), wilds(1:length(needed)-sum(inhand))];
                 usewild = true; % only use wild on best
+                pick_temp = pick;
             end
             edgevals_temp(pick) = -1; % set the pick's value to -1 so we don't choose it again
             anyhavevalue = true;
         end
     elseif usewild % value of must current choice is medium/low but there's another with high value worth using wilds on
-        [G, cards, info] = laytrack(G, turn, pick, cards, ind, info);
+        [G, cards, info] = laytrack(G, turn, pick_temp, cards, ind, info);
         turnover = true;
     elseif length([cards.deck, cards.discards] > 1) %#ok<ISMT> % taking cards yay
         cards = pickcards(turn, G, memory, cards, s);
         turnover = true;
     else
-        warning('Not enough cards')
+        % endgame
+        
     end
 end
 

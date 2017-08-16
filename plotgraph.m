@@ -1,9 +1,6 @@
 function plotgraph(turn, G, cards, info)
 
-% num discards 
 % x,y positions of cities
-% goal completions
-% pieces remaining
 
 clf
 playercolors = jet(info.players);
@@ -17,7 +14,7 @@ playerspots = [... % subplot indices
 
 %% individual player info
 longestroadpoints = addlongestroad(G, info);
-[~, completed] = addgoalcards(G, cards, info); % check if the goal was completed
+[goalpoints, completed] = addgoalcards(G, cards, info); % check if the goal was completed
 for player = 1:info.players
     subplot(12,10,playerspots(player,:))
     yspread = .25; if player == 1; yspread = yspread * 2; end
@@ -27,7 +24,7 @@ for player = 1:info.players
     ypos = ypos - yspread;
     yspread = yspread / 1.5;
     for goal = 1:length(cards.playergoals{player})
-        if completed{turn}(goal)
+        if completed{player}(goal)
             completion = '[COMPLETED]';
         else
             completion = '';
@@ -45,10 +42,16 @@ end
 
 %% general text at bottom
 subplot(12,10,101:120)
+text(0, 0, [sprintf('%d ', info.points) 'total points'], 'FontSize', 14)
+if turn == 0 % end of game
+    trackpoints = info.points - longestroadpoints - goalpoints;
+    text(0, .25, [sprintf('%d ', goalpoints), 'goal points'])
+else
+    trackpoints = info.points;
+end
+text(0, .5, [sprintf('%d ', longestroadpoints) 'longest points'])
+text(0, .75, [sprintf('%d ', trackpoints) 'track points'])
 text(0, 1, sprintf('%d cards in deck, %d cards in discard', length(cards.deck), length(cards.discards)), 'FontSize', 14)
-text(0, .75, [sprintf('%d ', info.points) 'track points'])
-text(0, .50, [sprintf('%d ', longestroadpoints) 'longest points'])
-text(0, .25, [sprintf('%d ', info.points+longestroadpoints) 'total points'], 'FontSize', 14)
 axis off
 
 %% plot graph
@@ -67,11 +70,15 @@ for edge = 1:numedges(G.taken)
 end
 
 %% current player's goals
-goalcolors = parula(length(cards.playergoals{turn}));
-for goal = 1:size(goalcolors, 1)
-    for city = 1:2
-        highlight(h, cards.playergoals{turn}{goal}{city}, 'NodeColor', goalcolors(goal,:), 'MarkerSize', 10)
+if turn > 0
+    goalcolors = parula(length(cards.playergoals{turn}));
+    for goal = 1:size(goalcolors, 1)
+        for city = 1:2
+            highlight(h, cards.playergoals{turn}{goal}{city}, 'NodeColor', goalcolors(goal,:), 'MarkerSize', 15)
+        end
     end
+else
+    text(0, -1, 'GAME OVER', 'FontSize', 20)
 end
 
 %%

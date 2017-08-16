@@ -45,6 +45,9 @@ while all(info.pieces > 2) % go until someone has 2 or fewer pieces
         turn = 1;
         info.rounds = info.rounds + 1;
     end
+    if KbCheck
+        keyboard
+    end
 end
 
 
@@ -67,5 +70,7 @@ info.points = info.points + addlongestroad(G, info);
 for turn = 1:players
     assert(45 - sum(G.distance.Edges.Weight(G.taken.Edges.Weight == turn)) == info.pieces(turn), 'Incorrect pieces remaining')
 end
+
+plotgraph(0, G, cards, info)
 
 % keyboard
