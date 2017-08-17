@@ -9,5 +9,3 @@ for color = 1:length(colorvals)
     valsfromcolor = bsxfun(@times, trackcolors == color, edgevals); % take all the tracks of that color and multiply by 
     colorvals(color) = sum(valsfromcolor(:)); % taked weighted sum of the values of the color
 end
-
-% based on s, prefer hoarding a single color or not (the more you have, the more you value)

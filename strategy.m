@@ -56,13 +56,13 @@
 function s = strategy(players)
 
 valuation = struct();
-valuation.goalpriorities = 'equal';
-valuation.routeminimizer = 'distance';
-valuation.iterativevaluation = false;
+% valuation.goalpriorities = 'equal';
+% valuation.routeminimizer = 'distance';
+valuation.iterativevaluation = true;
 valuation.attemptoverlap = true;
 
 beta.laytrack = [2.2908;-0.8744;0.8499;-32.2597;-2.1707;10.0435;15.3447;-0.3456];
+beta.edgeweights = [1;1;.5;0;0;0;0];
 
 s = struct('valuation', cellfun(@(x) valuation, cell(1, players), 'UniformOutput', false), ...
     'beta', cellfun(@(x) beta, cell(1, players), 'UniformOutput', false));
-

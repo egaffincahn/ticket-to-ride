@@ -3,6 +3,7 @@ function edgevals = valuateedges(turn, G, cards, info, s)
 
 edgevals = zeros(height(G.taken.Edges),1);
 H = G.distance; % H is subgraph of only edges that are the player's and are available
+H.Edges.Weight = glm(s, turn, [G.turns.Edges.Weight, G.distance.Edges.Weight, G.points.Edges.Weight], 'edgeweights', 'linear', false);
 H.Edges.Weight(all(G.taken.Edges.Weight ~= [0 turn], 2)) = Inf; % remove the edges where another player has taken
 H.Edges.Weight(G.distance.Edges.Weight > info.pieces(turn)) = Inf; % remove the edges where they don't have enough train cars left
 
@@ -23,13 +24,13 @@ for goal = 1:length(cards.playergoals{turn})
     % lots of best paths, then it will be given a higher weight.
     if s(turn).valuation.iterativevaluation
         for i = 1:length(bestedgepath)
+            H_temp = H;
             H_temp.Edges.Weight(bestedgepath(i)) = Inf; % make this edge impossible
             [valueadditions, ~, success] = basicstrategy(turn, G, H_temp, cards, info, goal); % repeat the strategy
             if ~success % when removing an edge, if no path can be found, then that edge is super important
                 valueadditions(bestedgepath(i)) = 1; % so we re-add it to the valuation in the subfunction
             end
             edgevals = addvalue(edgevals, valueadditions, cards, turn, goal, s);
-            
         end
     end
 end
@@ -70,21 +71,6 @@ switch s(turn).valuation.goalpriorities % must be one of these
         error('Invalid goal priorities in strategy')
 end
 
-% within a goal, which route to prioritize
-switch s(turn).valuation.routeminimizer % must be one of these
-    case 'distance'
-        % prefer short distance
-        % prefer longer distance
-    case 'turns'
-        % prefer more turns
-        % prefer fewer turns
-    case 'points'
-        % prefer most points per turn
-        % prefer fewest points per turn
-    otherwise
-        error('Invalid route minimizer in strategy')
-end
-
 
 if s(turn).valuation.attemptoverlap % on or off
     % not sure how to write this algorithm. one way:
@@ -120,10 +106,9 @@ bestpath = shortestpath(H_edgeweight0, connected{1}(closest1), connected{2}(clos
 edges = findedge(H_edgeweight0, bestpath(1:end-1), bestpath(2:end)); % the indices of the cities on that best path
 edges(ismember(edges, find(G.taken.Edges.Weight == turn))) = []; % remove tracks player has already played
 valueadditions(edges) = 1; % get the indices of the edges to increase
-success = sum(H_edgeweight0.Edges.Weight(edges)) <= info.pieces(turn); if ~success;
-    edges = []; 
-    return; end
-% add a check for shortest path distance being equal
+success = sum(H_edgeweight0.Edges.Weight(edges)) <= info.pieces(turn); if ~success; edges = []; end
+
+
 
 function edgevals = addvalue(edgevals, valueadditions, cards, turn, goal, s)
 % if ~success % if the goal can't be completed, just move on

@@ -1,3 +1,11 @@
--general strategy
--endgame plan
--plotting
+-endgame plan [valuateedges]
+-plotting [plotgraph]
+-implement parallel tracks [...]
+-prefer hoarding a single color or not (the more you have, the more you value) [valuatecolors]
+-aggression: try to block others? [valuateedges]
+-attempt longest road [valuateedges]
+-edit calculation of urgency [valuateedges]
+-more general attemptoverlap strategy for finding a central spine to connect all other cities to [valuateedges]
+-goalpriorities strategy: should it be a separate strategy or just a multiplier on value? [valuateedges]
+-strategy for when to pick up new goal cards [doturn]
+-when to use wildcards [doturn]

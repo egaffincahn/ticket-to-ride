@@ -42,11 +42,12 @@ end
 
 %% general text at bottom
 subplot(12,10,101:120)
-text(0, 0, [sprintf('%d ', info.points) 'total points'], 'FontSize', 14)
 if turn == 0 % end of game
+    text(0, 0, [sprintf('%d ', info.points) 'total points'], 'FontSize', 14)
     trackpoints = info.points - longestroadpoints - goalpoints;
     text(0, .25, [sprintf('%d ', goalpoints), 'goal points'])
 else
+    text(0, 0, [sprintf('%d ', info.points + longestroadpoints) 'total points'], 'FontSize', 14)
     trackpoints = info.points;
 end
 text(0, .5, [sprintf('%d ', longestroadpoints) 'longest points'])
@@ -70,15 +71,15 @@ for edge = 1:numedges(G.taken)
 end
 
 %% current player's goals
-if turn > 0
+if turn == 0
+    text(0, -1, 'GAME OVER', 'FontSize', 20)
+else
     goalcolors = parula(length(cards.playergoals{turn}));
     for goal = 1:size(goalcolors, 1)
         for city = 1:2
             highlight(h, cards.playergoals{turn}{goal}{city}, 'NodeColor', goalcolors(goal,:), 'MarkerSize', 15)
         end
     end
-else
-    text(0, -1, 'GAME OVER', 'FontSize', 20)
 end
 
 %%
