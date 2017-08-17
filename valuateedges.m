@@ -14,7 +14,7 @@ for goal = 1:length(cards.playergoals{turn})
 
     % Computes the basic strategy. Logic is below in sub-function. Then add
     % value based on findings.
-    [valueadditions, bestedgepath, success] = basicstrategy(turn, G, H, cards, goal);
+    [valueadditions, bestedgepath, success] = basicstrategy(turn, G, H, cards, info, goal);
     if ~success; continue; end
     edgevals = addvalue(edgevals, valueadditions, cards, turn, goal, s);
     
@@ -24,7 +24,7 @@ for goal = 1:length(cards.playergoals{turn})
     if s(turn).valuation.iterativevaluation
         for i = 1:length(bestedgepath)
             H_temp.Edges.Weight(bestedgepath(i)) = Inf; % make this edge impossible
-            [valueadditions, ~, success] = basicstrategy(turn, G, H_temp, cards, goal); % repeat the strategy
+            [valueadditions, ~, success] = basicstrategy(turn, G, H_temp, cards, info, goal); % repeat the strategy
             if ~success % when removing an edge, if no path can be found, then that edge is super important
                 valueadditions(bestedgepath(i)) = 1; % so we re-add it to the valuation in the subfunction
             end
@@ -41,6 +41,7 @@ if all(edgevals < 1) && any(info.pieces < 15)
     
     % prioritize based on longest total
     valueadditions = G.distance.Edges.Weight;
+    valueadditions(G.distance.Edges.Weight > info.pieces(turn)) = -1;
     edgevals = addvalue(edgevals, valueadditions, cards, turn, goal, s);
 end
 
@@ -94,36 +95,35 @@ if s(turn).valuation.attemptoverlap % on or off
 end
 
 
-function [valueadditions, edges, success] = basicstrategy(turn, G, H, cards, goal)
+function [valueadditions, edges, success] = basicstrategy(turn, G, H, cards, info, goal)
 
-% This will be one base strategy. Logic: For each city in the goal
-% card, get all the cities connected to it. Then find the best route
-% from any city on one side of the goal card to any city connected to
-% the other side.
+% This will be one base strategy. Logic: For each city in the goal card,
+% get all the cities connected to it. Set all the previously laid track
+% weights to 0 to allow frictionless movement between them when searching
+% for shortest path. Then find the best route from any city on one side of
+% the goal card to any city connected to the other side.
 playergraph = rmedge(G.distance, find(G.taken.Edges.Weight ~= turn)); % get a smaller graph where the edges are the player's connected cities
 valueadditions = zeros(height(G.taken.Edges),1);
-
-%%% PROBLEM:
-% This code chooses the shortest path from any city connected to one side
-% of the goal to any city connected to another side of the goal. What it
-% doesn't do is use already connected cities (not connected to either goal)
-% as intermediates to cut off tracks. Reproduce with ticket(3) and pause
-% when player 1 lays the Salt Lake City - Denver track.
 
 for j = 1:2 % scroll through each city in the goal
     tree = shortestpathtree(playergraph, cards.playergoals{turn}{goal}{j}, 'OutputForm', 'cell'); % get all the cities the goal city is connected to
     connected{j} = findnode(H, unique([tree{:}])); %#ok<AGROW> % get the indices of the connected cities
 end
+H_edgeweight0 = H; % allow "frictionless" movement between any of the player's own intermediate cities not connected to a goal
+H_edgeweight0.Edges.Weight(G.taken.Edges.Weight == turn) = 0;
 numpossible = length(connected{1}) * length(connected{2}); %
-connectionmatrix = distances(H); % get the connection matrix of all the cities with taken tracks as Inf
+connectionmatrix = distances(H_edgeweight0); % get the connection matrix of all the cities with taken tracks as Inf
 [bestdist, ind] = min(reshape(connectionmatrix(connected{1}, connected{2}), [1 numpossible])); % get the best route from any on one side to any on the other
 success = ~isinf(bestdist); if ~success; edges = []; return; end
 [closest1, closest2] = ind2sub([length(connected{1}) length(connected{2})], ind); % get the subscripts - the closest cities on each side
-bestpath = shortestpath(H, connected{1}(closest1), connected{2}(closest2)); % get the best path
-edges = findedge(H, bestpath(1:end-1), bestpath(2:end)); % the indices of the cities on that best path
+bestpath = shortestpath(H_edgeweight0, connected{1}(closest1), connected{2}(closest2)); % get the best path
+edges = findedge(H_edgeweight0, bestpath(1:end-1), bestpath(2:end)); % the indices of the cities on that best path
 edges(ismember(edges, find(G.taken.Edges.Weight == turn))) = []; % remove tracks player has already played
 valueadditions(edges) = 1; % get the indices of the edges to increase
-
+success = sum(H_edgeweight0.Edges.Weight(edges)) <= info.pieces(turn); if ~success;
+    edges = []; 
+    return; end
+% add a check for shortest path distance being equal
 
 function edgevals = addvalue(edgevals, valueadditions, cards, turn, goal, s)
 % if ~success % if the goal can't be completed, just move on

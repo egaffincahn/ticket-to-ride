@@ -29,7 +29,7 @@ for player = 1:info.players
         else
             completion = '';
         end
-        text(0, ypos, sprintf('%s - %s %s', cards.playergoals{player}{goal}{1}, cards.playergoals{player}{goal}{2}, completion))
+        text(0, ypos, sprintf('%s - %s [%d] %s', cards.playergoals{player}{goal}{1}, cards.playergoals{player}{goal}{2}, cards.playergoals{player}{goal}{3}, completion))
         ypos = ypos - yspread;
     end
     if player == turn

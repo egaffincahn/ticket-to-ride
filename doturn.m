@@ -13,13 +13,11 @@ anyhavevalue = false; % whether any track has high enough value to place
 while ~turnover
     
     [value, pick] = max(edgevals_temp); % find the highest valued track
-%     considerations = [1, length(cards.hand{turn}), value, info.players];
     
-    if value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15) % pick new goal cards, exciting!
+    if(info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
-    elseif logisticvaluation(length(cards.hand{turn}), value, info.players) > rand %elseif (1 / (1 + exp(-beta * considerations'))) > rand
-%     elseif value > 10 || length(cards.hand{turn}) > (110-30)/length(cards.hand) && value > 0
+    elseif logistic(s, [length(cards.hand{turn}), value, info.players], 'laytrack') > rand
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
         [colorcounts, colorindices] = hist(cards.hand{turn}, 0:8); % how many of each color does player have
