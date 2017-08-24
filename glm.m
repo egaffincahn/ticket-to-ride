@@ -21,11 +21,11 @@ if intercept
 end
 
 % choose the appropriate weights from the strategy structure
-beta = s(turn).beta.(instance);
+beta = s(turn).(instance);
 
 switch link
     case 'logistic'
-        y = 1 ./ (1 + exp(-X * beta)); % get the probability from the logistic
+        y = 1 ./ (1 + exp(-X * beta(:))); % get the probability from the logistic
     case 'linear'
-        y = X * beta;
+        y = X * beta(:);
 end

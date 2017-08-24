@@ -5,8 +5,7 @@ completed = cell([1, info.players]);
 for turn = 1:info.players
     
     goalpoints = 0; % summation of points for completion of goals
-    H = G.taken;
-    H = rmedge(H, find(H.Edges.Weight ~= turn)); % remove all the edges where this player didn't go
+    H = rmedge(G.taken, find(G.taken.Edges.Weight ~= turn)); % remove all the edges where this player didn't go
     
     completed{turn} = true([1, length(cards.playergoals{turn})]);
     for i = 1:length(cards.playergoals{turn}) % scroll through each of the player's cards

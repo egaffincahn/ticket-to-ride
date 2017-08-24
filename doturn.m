@@ -14,12 +14,21 @@ forcetrack = false;
 while ~turnover
     
     [value, pick] = max(edgevals_temp); % find the highest valued track
-    problaytrack = glm(s, turn, [length(cards.hand{turn}), value, info.players], 'laytrack', 'logistic', true); % probability of laying track using logistic
+    problaytrack = glm(s, turn, [length(cards.hand{turn}), value, info.players], 'betalaytrack', 'logistic', true); % probability of laying track using logistic
     
-    if (info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
+    if value == -1
+%         keyboard
+    end
+    if length(cards.hand(turn)) > 50
+        keyboard
+    end
+    
+    if info.pieces(turn) == 0 % should be the last turn but don't have any pieces left!
+        turnover = true;
+    elseif (info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
-    elseif problaytrack > rand && value > 0 || forcetrack % track worth laying
+    elseif problaytrack > rand && value > 0 || forcetrack || length(cards.hand(turn)) > 50 % track worth laying
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
         [colorcounts, colorindices] = hist(cards.hand{turn}, 0:8); % how many of each color does player have
@@ -28,6 +37,7 @@ while ~turnover
         % figure out how many of the color(s) needed are in hand
         if trackcolor > 10 % two color options
             inhand = 0; % how many of that color player has
+            choicecolor = floor(trackcolor / 10); % assume first pick
             for choicecolor_temp = [floor(trackcolor / 10), mod(trackcolor, 10)] % scroll between the two colors
                 inhand_temp = colorcounts(choicecolor_temp == colorindices); % how many of the color the player has
                 if inhand_temp > inhand % if it's more
@@ -45,7 +55,7 @@ while ~turnover
             % distance but with lowest value from valuatecolors()
             choicecolor = find(colorcounts(colorindices > 0) >= needed, 1, 'first');
             if isempty(choicecolor)
-                inhand = 0;
+                [inhand, choicecolor] = max(colorcounts(colorindices > 0));
             else
                 inhand = colorcounts(choicecolor == colorindices);
             end

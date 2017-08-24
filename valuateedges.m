@@ -3,7 +3,7 @@ function edgevals = valuateedges(turn, G, cards, info, s)
 
 edgevals = zeros(height(G.taken.Edges),1);
 H = G.distance; % H is subgraph of only edges that are the player's and are available
-H.Edges.Weight = glm(s, turn, [G.turns.Edges.Weight, G.distance.Edges.Weight, G.points.Edges.Weight], 'edgeweights', 'linear', false);
+H.Edges.Weight = glm(s, turn, [G.turns.Edges.Weight, G.distance.Edges.Weight, G.points.Edges.Weight], 'betaedgeweights', 'linear', false);
 H.Edges.Weight(all(G.taken.Edges.Weight ~= [0 turn], 2)) = Inf; % remove the edges where another player has taken
 H.Edges.Weight(G.distance.Edges.Weight > info.pieces(turn)) = Inf; % remove the edges where they don't have enough train cars left
 
@@ -22,7 +22,7 @@ for goal = 1:length(cards.playergoals{turn})
     % ITERATIVE VALUATION STRATEGY: Iteratively remove a possible edge from
     % the best path, then recompute the best path. If an edge is used in
     % lots of best paths, then it will be given a higher weight.
-    if s(turn).valuation.iterativevaluation
+    if s(turn).iterativevaluation
         for i = 1:length(bestedgepath)
             H_temp = H;
             H_temp.Edges.Weight(bestedgepath(i)) = Inf; % make this edge impossible
@@ -54,25 +54,25 @@ edgevals(find(G.taken.Edges.Weight)) = -1; %#ok<FNDSB> % IS THIS NECESSARY???
 
 
 % which goal to prioritize
-switch s(turn).valuation.goalpriorities % must be one of these
-    % consider chance of getting the goal in prioritizing it
-    case 'distance'
-        % prioritize longest
-        % prioritize shortest
-    case 'turns'
-        % prioritize most number of turns
-        % prioritize fewest number of turns
-    case 'points'
-        % prioritize most number of points per turn
-        % prioritize fewest number of points per turn
-    case 'equal'
-        % all goals equally prioritized
-    otherwise
-        error('Invalid goal priorities in strategy')
-end
+% switch s(turn).goalpriorities % must be one of these
+%     % consider chance of getting the goal in prioritizing it
+%     case 'distance'
+%         % prioritize longest
+%         % prioritize shortest
+%     case 'turns'
+%         % prioritize most number of turns
+%         % prioritize fewest number of turns
+%     case 'points'
+%         % prioritize most number of points per turn
+%         % prioritize fewest number of points per turn
+%     case 'equal'
+%         % all goals equally prioritized
+%     otherwise
+%         error('Invalid goal priorities in strategy')
+% end
 
 
-if s(turn).valuation.attemptoverlap % on or off
+if s(turn).attemptvaluationoverlap % on or off
     % not sure how to write this algorithm. one way:
     % cluster the goals (with unknown k)
     % find important nodes in clusters
@@ -106,7 +106,7 @@ bestpath = shortestpath(H_edgeweight0, connected{1}(closest1), connected{2}(clos
 edges = findedge(H_edgeweight0, bestpath(1:end-1), bestpath(2:end)); % the indices of the cities on that best path
 edges(ismember(edges, find(G.taken.Edges.Weight == turn))) = []; % remove tracks player has already played
 valueadditions(edges) = 1; % get the indices of the edges to increase
-success = sum(H_edgeweight0.Edges.Weight(edges)) <= info.pieces(turn); if ~success; edges = []; end
+success = sum(G.distance.Edges.Weight(edges)) <= info.pieces(turn); if ~success; edges = []; end
 
 
 

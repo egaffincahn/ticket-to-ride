@@ -1,12 +1,15 @@
+
+
 % Logic of this function: We take the graph of track distances and then
 % only keep the ones where the current player has laid the track. Then we
-% take the remaining connections and build a full adjacency matrix, which
-% is a symmetric matrix (# cities x # cities) where there is a 1 at each
-% (row,column) pair where the two cities are connected. Start with a column
-% that has a connection, and then look down the column for connected
-% cities. If there's only 1, remove that connection, then do the same for
-% the connected city. If there are ever 2 or more cities connected,
-% duplicate everything and keep going down each path.
+% take the remaining connections (the player's tracks) and build a full
+% adjacency matrix, which is a symmetric matrix (# cities x # cities) where
+% there is a 1 at each (row,column) pair where the two cities are
+% connected. Start with a column that has a connection, and then look down
+% the column for connected cities. If there's only 1, remove that
+% connection, then do the same for the connected city. If there are ever 2
+% or more cities connected, duplicate everything and keep going down each
+% path.
 
 %#ok<*AGROW>
 
@@ -15,10 +18,54 @@ function [points, bestdist] = addlongestroad(G, info)
 bestdist = zeros([1, info.players]); % initialize each player's longest at 0
 
 for turn = 1:info.players
-    
-    H = G.distance; % use the graph of track distances to calculate longest track
-    H = rmedge(H, find(G.taken.Edges.Weight ~= turn)); % remove all the edges where this player didn't go
+%     tic
 
+    H = rmedge(G.distance, find(G.taken.Edges.Weight ~= turn)); % remove all the edges where this player didn't go
+
+%     % alternative logic to work on: Get the player's subgraph and perform a
+%     % depth first search on it. (Do I have to do this for every city in the
+%     % subgraph?) Then calculate the distance from city n to city n+1. Keep
+%     % this in some temporary storage. If n is not connected to n+1, then
+%     % what we have so far is the best estimate. Then backtrack to find the
+%     % n-x which IS conected to n+1 and keep trying. Then when n is not
+%     % connected to n+1, test that against the previous best. Continue this
+%     % until n+1=N. Then check if city 1 is connected to N and if so then
+%     % add it.
+%     best = 0;
+%     groups = conncomp(H); % groups connected cities
+%     [N, nodes] = histcounts(groups, 1:numnodes(H)); % get the groups that have more than one city (are on an edge)
+%     cities = find(ismember(groups, nodes(N > 1))); % extract the cities that show up on an edge
+%     for i = 1:length(cities) % scroll through cities the player is connected to
+%        citylist = dfsearch(H, cities(i)); % do depth-first search of all player's cities
+%        best_ind = 1;
+%        best_temp = {0};
+%        for j = 1:length(citylist)-1 % scroll through the findings from the depth-first search
+%            distance = findedge(H, citylist(j), citylist(j+1)); % the edge length
+%            if distance > 0
+%                best_temp{best_ind} = best_temp{best_ind} + distance;
+%            else % last two are not connected, have to go back
+%                for k = j-1:-1:1
+%                    distance = findedge(H, citylist(k), citylist(j+1)); % the edge length
+%                    if distance > 0
+%                        best_ind = best_ind + 1;
+%                        best_temp{best_ind} = 
+%                        break
+%                    end
+%                end
+%            end
+%        end
+%        
+%         % get the
+%     end
+%     if sum(G.taken.Edges.Weight == turn) > 10
+%         keyboard
+%     end
+    
+    
+    
+    
+    
+    
     fulladjmat = full(adjacency(H)); % create full adjacency matrix with 1s where two cities are connected by this player
     path = {}; % each cell is vector representing the route through each city index
     terminated = false(size(path)); % vector representing whether the path has been full searched
@@ -66,6 +113,7 @@ for turn = 1:info.players
             break
         end
     end
+%     toc
     bestdist(turn) = max(playerdists);
 end
 

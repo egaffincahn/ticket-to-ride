@@ -1,3 +1,14 @@
+function S = strategy(individuals)
+
+iterativevaluation = mat2cell(round(rand(individuals,1)), ones(individuals,1));
+attemptvaluationoverlap = mat2cell(round(rand(individuals,1)), ones(individuals,1));
+betalaytrack = mat2cell(bsxfun(@times, randn(individuals,8), 1./(1:8)), ones(1,individuals));
+betaedgeweights = mat2cell(rand(individuals,7), ones(1,individuals));
+
+S = struct('iterativevaluation', iterativevaluation, 'attemptvaluationoverlap', attemptvaluationoverlap, 'betalaytrack', betalaytrack, 'betaedgeweights', betaedgeweights);
+
+
+
 % parameters that could control a player's gameplay:
 % -how many cards to stash
 %   -use as soon as you have
@@ -53,16 +64,16 @@
 %   -some combination, but stochastic
 
 
-function s = strategy(players)
-
-valuation = struct();
-% valuation.goalpriorities = 'equal';
-% valuation.routeminimizer = 'distance';
-valuation.iterativevaluation = true;
-valuation.attemptoverlap = true;
-
-beta.laytrack = [2.2908;-0.8744;0.8499;-32.2597;-2.1707;10.0435;15.3447;-0.3456];
-beta.edgeweights = [1;1;.5;0;0;0;0];
-
-s = struct('valuation', cellfun(@(x) valuation, cell(1, players), 'UniformOutput', false), ...
-    'beta', cellfun(@(x) beta, cell(1, players), 'UniformOutput', false));
+% function s = strategy(players)
+% 
+% valuation = struct();
+% % valuation.goalpriorities = 'equal';
+% % valuation.routeminimizer = 'distance';
+% valuation.iterativevaluation = true;
+% valuation.attemptoverlap = true;
+% 
+% beta.laytrack = [2.2908;-0.8744;0.8499;-32.2597;-2.1707;10.0435;15.3447;-0.3456];
+% beta.edgeweights = [1;1;.5;0;0;0;0];
+% 
+% s = struct('valuation', cellfun(@(x) valuation, cell(1, players), 'UniformOutput', false), ...
+%     'beta', cellfun(@(x) beta, cell(1, players), 'UniformOutput', false));

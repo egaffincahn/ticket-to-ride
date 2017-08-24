@@ -1,15 +1,22 @@
-function winner = ticket(players)
+function [points, winner] = ticket(s, players)
 
-rng(1)
+% rng(1)
 
-if nargin < 1 || isempty(players) % assume 3 players in the game
-    players = 2;
+if nargin < 2 || isempty(players) % assume 3 players in the game
+    if nargin > 0 && ~isempty(s)
+        players = length(s);
+    else
+        players = 3;
+    end
+end
+if nargin < 1 || isempty(s)
+    s = strategy(players); % WILL BE RANDOMIZED!!
 end
 assert(players >= 2 && players <= 5, 'Must be between 2-5 players')
 
 G = initializemap;
 
-s = strategy(players);
+% s = strategy(players);
 
 info.pieces = 45 * ones([players, 1]); % number of trains each player has
 info.points = zeros([1, players]); % initialize everyone to 0 points
@@ -38,15 +45,17 @@ end
 
 turn = 1; % indicates player whose turn it is
 memory = struct('taken', cellfun(@(x) G.taken, cell(1, players), 'UniformOutput', false));
+% tic
 while all(info.pieces > 2) % go until someone has 2 or fewer pieces
     [G, cards, info, memory] = doturn(turn, G, cards, info, memory, s);
     turn = turn + 1;
     if turn > players
         turn = 1;
         info.rounds = info.rounds + 1;
+%         fprintf('%.2f s elapsed for round %d\n', toc, info.rounds), tic
     end
     if KbCheck
-        keyboard
+%         keyboard
     end
 end
 
@@ -72,5 +81,7 @@ for turn = 1:players
 end
 
 plotgraph(0, G, cards, info)
+
+points = info.points
 
 % keyboard
