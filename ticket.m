@@ -10,7 +10,7 @@ if nargin < 2 || isempty(players) % assume 3 players in the game
     end
 end
 if nargin < 1 || isempty(s)
-    s = strategy(players); % WILL BE RANDOMIZED!!
+    s = strategy(players, true);
 end
 assert(players >= 2 && players <= 5, 'Must be between 2-5 players')
 

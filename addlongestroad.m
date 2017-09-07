@@ -18,7 +18,6 @@ function [points, bestdist] = addlongestroad(G, info)
 bestdist = zeros([1, info.players]); % initialize each player's longest at 0
 
 for turn = 1:info.players
-%     tic
 
     H = rmedge(G.distance, find(G.taken.Edges.Weight ~= turn)); % remove all the edges where this player didn't go
 
@@ -31,38 +30,47 @@ for turn = 1:info.players
 %     % connected to n+1, test that against the previous best. Continue this
 %     % until n+1=N. Then check if city 1 is connected to N and if so then
 %     % add it.
-%     best = 0;
 %     groups = conncomp(H); % groups connected cities
 %     [N, nodes] = histcounts(groups, 1:numnodes(H)); % get the groups that have more than one city (are on an edge)
 %     cities = find(ismember(groups, nodes(N > 1))); % extract the cities that show up on an edge
+%     bestcities = cell(length(cities),1);
+%     bestpoints = nan(length(cities),1);
 %     for i = 1:length(cities) % scroll through cities the player is connected to
 %        citylist = dfsearch(H, cities(i)); % do depth-first search of all player's cities
 %        best_ind = 1;
-%        best_temp = {0};
+%        bestpoints_temp = {[]};
+%        bestcities_temp = {citylist(1)};
 %        for j = 1:length(citylist)-1 % scroll through the findings from the depth-first search
-%            distance = findedge(H, citylist(j), citylist(j+1)); % the edge length
-%            if distance > 0
-%                best_temp{best_ind} = best_temp{best_ind} + distance;
+%            ind = findedge(H, citylist(j), citylist(j+1)); % get the edge index
+%            if ind > 0 % edge exists
+%                distance = H.Edges.Weight(ind); % the edge length
+%                bestpoints_temp{best_ind} = [bestpoints_temp{best_ind}, + distance];
+%                bestcities_temp{best_ind} = [bestcities_temp{best_ind}, citylist(j+1)];
 %            else % last two are not connected, have to go back
-%                for k = j-1:-1:1
-%                    distance = findedge(H, citylist(k), citylist(j+1)); % the edge length
-%                    if distance > 0
+%                for k = j-1:-1:1 % k will end up as last city in the dfsearch that's connected to j+1
+%                    ind = findedge(H, citylist(k), citylist(j+1)); % get the edge index
+%                    if ind > 0 % edge exists
 %                        best_ind = best_ind + 1;
-%                        best_temp{best_ind} = 
+%                        distance = H.Edges.Weight(ind); % the edge length
+%                        bestpoints_temp{best_ind} = [bestpoints_temp{best_ind-1}(1:k-1), distance]; % all the points except the last one
+%                        bestcities_temp{best_ind} = [bestcities_temp{best_ind-1}(1:k), citylist(j+1)];% all the cities except the last one
 %                        break
 %                    end
 %                end
 %            end
 %        end
-%        
-%         % get the
+%        ind = findedge(H, citylist(1), citylist(j+1)); % get the edge index
+%        if length(citylist) > 2 && ind > 0  % it's a loop so the first is connected to the last
+%            distance = H.Edges.Weight(ind); % the edge length
+%            bestpoints_temp{best_ind} = [bestpoints_temp{best_ind}, distance];
+%            bestcities_temp{best_ind} = [bestcities_temp{best_ind}, citylist(j+1)];
+%        end
+%        bestpointstotal = cellfun(@sum, bestpoints_temp);
+%        [currentbest, ind] = max(bestpointstotal);
+%        bestcities{i} = bestcities_temp{ind};
+%        bestpoints(i) = currentbest;
 %     end
-%     if sum(G.taken.Edges.Weight == turn) > 10
-%         keyboard
-%     end
-    
-    
-    
+%     bestdist(turn) = max(bestpoints);
     
     
     
@@ -113,7 +121,6 @@ for turn = 1:info.players
             break
         end
     end
-%     toc
     bestdist(turn) = max(playerdists);
 end
 

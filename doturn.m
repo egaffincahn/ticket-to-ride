@@ -28,7 +28,7 @@ while ~turnover
     elseif (info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
-    elseif problaytrack > rand && value > 0 || forcetrack || length(cards.hand(turn)) > 50 % track worth laying
+    elseif ~isempty(cards.hand{turn}) && (problaytrack > rand && value > 0 || forcetrack || length(cards.hand(turn)) > 50) % track worth laying
         track = G.color.Edges(pick,:); % the highest valued track
         trackcolor = track.Weight; % the color index of that track
         [colorcounts, colorindices] = hist(cards.hand{turn}, 0:8); % how many of each color does player have
@@ -79,7 +79,7 @@ while ~turnover
     elseif usewild % value of must current choice is medium/low but there's another with high value worth using wilds on
         [G, cards, info] = laytrack(G, turn, pick_temp, cards, ind, info);
         turnover = true;
-    elseif length([cards.deck, cards.discards]) > 1 % taking cards yay
+    elseif length([cards.deck, cards.discards]) > 1 || (length([cards.deck, cards.discards]) > 1 && isempty(cards.hand{turn})) % taking cards yay
         cards = pickcards(turn, G, memory, cards, s);
         turnover = true;
     else

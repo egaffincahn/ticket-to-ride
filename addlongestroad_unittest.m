@@ -118,7 +118,7 @@ test = test + 1;
 G.taken.Edges.Weight(findedge(G.taken, 'Oklahoma City', 'El Paso')) = 0; % -5
 G.taken.Edges.Weight(findedge(G.taken, 'Dallas', 'El Paso')) = turn; % 4
 [points, bestdist] = addlongestroad(G, info);
-if ~all(points == [10 0 0] & bestdist == [17 14 14])
+if ~all(points == [10 0 0] & bestdist == [38 14 14])
     failed(G, turn, test)
 end
 

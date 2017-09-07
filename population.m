@@ -6,7 +6,7 @@ if nargin < 1 || isempty(players)
     players = 3;
 end
 
-individuals = 10;
+individuals = 100;
 iterations = 100;
 
 S = strategy(individuals);
@@ -33,3 +33,5 @@ for i = 1:iterations
 end
 
 plot(pointsmatrix)
+
+keyboard
