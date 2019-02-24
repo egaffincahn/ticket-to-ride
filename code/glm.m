@@ -1,11 +1,10 @@
-% Calculates the probability of doing some action based on a variable
-% number of considerations (number of players, number of tracks, etc), and
-% then depending on what we're calculating the probability of (laying down
-% a new track, etc), pick the appropriate beta weights from the strategy
+% GLM calculates the probability of doing some action based on a variable
+% number of considerations (number of players, number of tracks, etc).
+% Then, depending on what we're calculating the probability of (e.g, laying
+% down a new track), pick the appropriate beta weights from the strategy
 % matrix. Then use the logistic to get the probability.
+
 function y = glm(s, turn, considerations, instance, link, intercept)
-
-
 
 % build the design matrix including all interactions
 X = [];

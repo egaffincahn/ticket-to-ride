@@ -9,23 +9,27 @@ edgevals_temp = memory(turn).edgevals; % create temporary duplicate to delete ce
 turnover = false; % whether a track has been placed (when turn is over)
 usewild = false; % pick is valued high enough to warrant using wildcards
 anyhavevalue = false; % whether any track has high enough value to place
-forcetrack = false;
+forcetrack = false; % for endgame
+
+if any(info.pieces <= 2)
+    usewild = true;
+    forcetrack = true;
+end
 
 while ~turnover
     
     [value, pick] = max(edgevals_temp); % find the highest valued track
-    problaytrack = glm(s, turn, [length(cards.hand{turn}), value, info.players], 'betalaytrack', 'logistic', true); % probability of laying track using logistic
+    % calculate the probabilities of certain actions
+    problaytrack = glm(s, turn, [length(cards.hand{turn}), value, info.players], 'betalaytrack', 'logistic', true);
+    probpickgoals = glm(s, turn, [info.pieces(turn), min(info.pieces(1:info.players ~= turn)), mean(G.taken.Edges.Weight)], 'betapickgoals', 'logistic', true);
     
-    if value == -1
-%         keyboard
-    end
     if length(cards.hand(turn)) > 50
         keyboard
     end
     
-    if info.pieces(turn) == 0 % should be the last turn but don't have any pieces left!
+    if info.pieces(turn) == 0 || value < 0 % last turn but don't have enough pieces left!
         turnover = true;
-    elseif (info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
+    elseif height(cards.goalcards) > 0 && probpickgoals > rand && ~anyhavevalue %(info.rounds == 1 && rand > .5) || (value < .1 && ~anyhavevalue && height(cards.goalcards) > 0 && all(info.pieces > 15)) % pick new goal cards, exciting!
         cards = pickgoals(turn, cards, s);
         turnover = true;
     elseif ~isempty(cards.hand{turn}) && (problaytrack > rand && value > 0 || forcetrack || length(cards.hand(turn)) > 50) % track worth laying
@@ -62,16 +66,17 @@ while ~turnover
         end
         
         % check hand against how many are needed
-        if inhand >= G.distance.Edges.Weight(pick) && info.pieces(turn) >= G.distance.Edges.Weight(pick) % yay, laying a track!
+        inhand_pluswild = inhand + (sum(cards.hand{turn}==0) * (usewild || forcetrack));
+        if inhand_pluswild >= G.distance.Edges.Weight(pick) && info.pieces(turn) >= G.distance.Edges.Weight(pick) % yay, laying a track!
             ind = find(cards.hand{turn} == choicecolor, needed, 'first'); % indices of the first N cards of the color to use
             [G, cards, info] = laytrack(G, turn, pick, cards, ind, info);
             turnover = true;
         else % don't have enough with standard colors
-            if value > 15 && inhand + sum(cards.hand{turn}==0) >= needed && ~usewild % if have enough cards including the wilds and value is high and this is the max value (only do this once)
+            if (value > 15 || forcetrack) && inhand_pluswild >= needed && (~usewild || forcetrack) % if have enough cards including the wilds and value is high and this is the max value (only do this once)
                 colorcards = find(cards.hand{turn} == choicecolor); wilds = find(cards.hand{turn} == 0); cardspossible = [colorcards, wilds];
                 ind = cardspossible(1:needed);
-                usewild = true; % only use wild on best
-                pick_temp = pick;
+                usewild = true; % only use wild on best unless last turn
+                pick_temp = pick; % save this pick and we'll use it later when we come back around the decision loop
             end
             edgevals_temp(pick) = -1; % set the pick's value to -1 so we don't choose it again
             anyhavevalue = true;
@@ -82,8 +87,7 @@ while ~turnover
     elseif length([cards.deck, cards.discards]) > 1 || (length([cards.deck, cards.discards]) > 1 && isempty(cards.hand{turn})) % taking cards yay
         cards = pickcards(turn, G, memory, cards, s);
         turnover = true;
-    else
-        % endgame
+    else % happens for endgame
 %         keyboard
         forcetrack = true;
     end

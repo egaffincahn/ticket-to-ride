@@ -1,10 +1,11 @@
-function S = strategy(individuals, fixed)
+function S = strategy(individuals, players, fixed)
 
-if nargin < 2 || ~fixed
+if nargin < 3 || ~fixed
     
     iterativevaluation = mat2cell(round(rand(individuals,1)), ones(individuals,1));
     attemptvaluationoverlap = mat2cell(round(rand(individuals,1)), ones(individuals,1));
-    betalaytrack = mat2cell(bsxfun(@times, randn(individuals,8), 1./(1:8)), ones(1,individuals));
+    betalaytrack = mat2cell(bsxfun(@times, randn(individuals,8), 1./(1:8)), ones(1,individuals)); % 3 predictors -> 8 preds, incl interactions, intercept
+    betapickgoals = mat2cell(bsxfun(@times, randn(individuals,players^2-1), 1./(1:players^2-1)), ones(1,individuals));
     betaedgeweights = mat2cell(rand(individuals,7), ones(1,individuals));
     
 else
@@ -12,6 +13,7 @@ else
     iterativevaluation = mat2cell(true(individuals,1), ones(individuals,1));
     attemptvaluationoverlap = mat2cell(true(individuals,1), ones(individuals,1));
     betalaytrack = mat2cell(repmat([2.2908,-0.8744,0.8499,-32.2597,-2.1707,10.0435,15.3447,-0.3456], [individuals, 1]), ones(1,individuals));
+    betapickgoals = mat2cell(repmat([-1,-.5,-1,-1,0,0,0,0], [individuals, 1]), ones(1,individuals));
     betaedgeweights = mat2cell(repmat([1,1,.5,0,0,0,0], [individuals, 1]), ones(1,individuals));
     
 end
@@ -24,7 +26,11 @@ end
 %     S(1:individuals).(features{i}) = eval(features{i});
 % %     S = setfield(S, features{i}, eval(features{i}));
 % end
-S = struct('iterativevaluation', iterativevaluation, 'attemptvaluationoverlap', attemptvaluationoverlap, 'betalaytrack', betalaytrack, 'betaedgeweights', betaedgeweights);
+S = struct('iterativevaluation', iterativevaluation, ...
+    'attemptvaluationoverlap', attemptvaluationoverlap, ...
+    'betalaytrack', betalaytrack, ...
+    'betapickgoals', betapickgoals, ...
+    'betaedgeweights', betaedgeweights);
 
 % parameters that could control a player's gameplay:
 % -how many cards to stash

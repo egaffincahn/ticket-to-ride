@@ -1,4 +1,4 @@
-function kids = multiply(parents, nkids)
+function kids = multiply(parents, nkids, players)
 
 kids = struct();
 fields = fieldnames(parents);
@@ -8,7 +8,7 @@ for k = 1:nkids
             alpha = rand;
             parentvalues = [parents(1).(fields{f})(i), parents(2).(fields{f})(i)];
             if rand < .1
-                s = strategy(1);
+                s = strategy(1, players);
                 kids(k).(fields{f})(i) = s.(fields{f})(i);
             elseif sum(parentvalues(1) == [0 1]) == 1 && sum(parentvalues(2) == [0 1]) == 1 % the gene is binary
                 kids(k).(fields{f})(i) = parentvalues(round(alpha)+1); % choose parent at random

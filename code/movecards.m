@@ -1,3 +1,7 @@
+% During player number TURN, MOVECARDS re-allocates cards with FROM and TO,
+% which can be 'deck', 'faceup', 'discards', 'hand'. The number of cards is
+% given by IND.
+
 function cards = movecards(turn, cards, from, to, ind)
 
 switch from

@@ -1,5 +1,5 @@
 -endgame plan [valuateedges]
--plotting [plotgraph]
+-plotting [plotgraph] (make prettier?)
 -implement parallel tracks [...]
 -prefer hoarding a single color or not (the more you have, the more you value) [valuatecolors]
 -aggression: try to block others? [valuateedges]

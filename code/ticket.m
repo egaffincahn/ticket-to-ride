@@ -1,6 +1,6 @@
 function [points, winner] = ticket(s, players)
 
-% rng(1)
+rng(6)
 
 if nargin < 2 || isempty(players) % assume 3 players in the game
     if nargin > 0 && ~isempty(s)
@@ -10,7 +10,7 @@ if nargin < 2 || isempty(players) % assume 3 players in the game
     end
 end
 if nargin < 1 || isempty(s)
-    s = strategy(players, true);
+    s = strategy(players, players, true);
 end
 assert(players >= 2 && players <= 5, 'Must be between 2-5 players')
 
@@ -30,7 +30,7 @@ cards.faceup =  [];
 cards.discards = [];
 cards = movecards([], cards, 'deck', 'faceup', 1:5); % put first 5 face up
 for turn = 1:players
-    cards = movecards(turn, cards, 'deck', 'hand', 1:4);
+    cards = movecards(turn, cards, 'deck', 'hand', 1:4); % give players their first cards
 end
 
 cards.goalcards = importgoals; % read goal cards in from the txt file
@@ -44,7 +44,7 @@ for turn = 1:players
 end
 
 turn = 1; % indicates player whose turn it is
-memory = struct('taken', cellfun(@(x) G.taken, cell(1, players), 'UniformOutput', false));
+memory = struct('taken', cellfun(@(x) G.taken, cell(1, players), 'UniformOutput', false)); % remembers what tracks the player took
 % tic
 while all(info.pieces > 2) % go until someone has 2 or fewer pieces
     [G, cards, info, memory] = doturn(turn, G, cards, info, memory, s);
