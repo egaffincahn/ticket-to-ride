@@ -4,6 +4,6 @@ A program that plays Ticket to Ride!
 Call  
 `winner = ticket(numplayers)`
 
-The program can now compete (at least a little)! It has some general algorithms to help it valuate edges and can complete goal cards with only a little bit of difficulty. It's not "smart," meaning that the possible strategies are manually coded. There is no general strategy, abstracted from a representation of the game board, resources, and goal cards.
+The program can now compete (at least a little)! Each individual in the genetic algorithm is represented by one feed-forward neural network. The inputs are the cards in hand, the face-up cards, the player's goal cards, and a representation of the board and its tracks. The output is the player's action. There is no specific strategy, but over time the each generation should be better at playing than the previous.
 
 If turned on, the `plotgraph` function allows you to visualize the gameplay.

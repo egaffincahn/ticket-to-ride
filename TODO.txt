@@ -1,11 +1,3 @@
--endgame plan [valuateedges]
--plotting [plotgraph] (make prettier?)
--implement parallel tracks [...]
--prefer hoarding a single color or not (the more you have, the more you value) [valuatecolors]
--aggression: try to block others? [valuateedges]
--attempt longest road [valuateedges]
--edit calculation of urgency [valuateedges]
--more general attemptoverlap strategy for finding a central spine to connect all other cities to [valuateedges]
--goalpriorities strategy: should it be a separate strategy or just a multiplier on value? [valuateedges]
--strategy for when to pick up new goal cards [doturn]
--when to use wildcards [doturn]
+-currently can draw (and keep) exactly 2 goal cards, instead of 3 and being able to choose
+-better support for multi-track and multi-color tracks
+-make plotting prettier?

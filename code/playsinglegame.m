@@ -1,6 +1,8 @@
-function [gamepoints, winner] = playsinglegame
+function [gamepoints, winner] = playsinglegame(players)
 
-players = 3;
+if ~nargin
+    players = 3;
+end
 doplot = true;
 
 [G, cards, info] = setupgame(players);
