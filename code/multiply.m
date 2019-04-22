@@ -1,20 +1,30 @@
-function kids = multiply(parents, nkids, players)
+function s = multiply(s, players)
 
-kids = struct();
-fields = fieldnames(parents);
-for k = 1:nkids
-    for f = 1:length(fields)
-        for i = 1:length(parents(1).(fields{f}))
-            alpha = rand;
-            parentvalues = [parents(1).(fields{f})(i), parents(2).(fields{f})(i)];
-            if rand < .1
-                s = strategy(1, players);
-                kids(k).(fields{f})(i) = s.(fields{f})(i);
-            elseif sum(parentvalues(1) == [0 1]) == 1 && sum(parentvalues(2) == [0 1]) == 1 % the gene is binary
-                kids(k).(fields{f})(i) = parentvalues(round(alpha)+1); % choose parent at random
-            else % the gene is continuous
-                kids(k).(fields{f})(i) = parentvalues * [alpha; 1-alpha]; % linear combination of parents
-            end
+parents = randperm(length(s));
+nchildren = (players - 1) * 2;
+fnames = fieldnames(s);
+
+for i = 1:length(parents)/2
+    p1 = s((i-1)*2+1);
+    p2 = s(i*2);
+    child = p1; % initialize child to parent 1's weights
+    for c = 1:nchildren
+        for f = 1:length(fnames)
+            sz = size(p1.(fnames{f}));
+            weights = child.(fnames{f});
+            
+            % randomly choose which weights will come from parent 2
+            inherit = logical(round(rand(sz))); % which weights
+            parentweights = p2.(fnames{f}); % all of parent 2's weights
+            weights(inherit) = parentweights(inherit); % re-assign the randomly chosen weights
+            
+            % mutate some weights
+            mutations = rand(sz) < .01;
+            weights(mutations) = randn(sum(mutations(:)),1);
+            
+            child.(fnames{f}) = weights;
         end
+        s(end+1) = child;
     end
 end
+

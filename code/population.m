@@ -1,38 +1,50 @@
-function [] = population(players)
+function [] = population
 
-% rng(1)
-rng('shuffle')
+%#ok<*AGROW>
 
-if nargin < 1 || isempty(players)
-    players = 3;
+rng(2)
+
+individuals = 12;
+generations = 2;
+players = 3; % players per game - 1 lives on
+
+[G, cards, info] = setupgame(players);
+
+for i = 1:individuals
+    strategies(i) = strategy(G, cards);
+end
+% load('strategies', 'strategies')
+
+winnerpoints = nan(generations,individuals/players);
+durations = nan(generations,1);
+ages = ones(generations,individuals);
+for i = 1:generations
+    t = tic;
+    
+    [winnerpoints(i,:), losers] = rungeneration(G, strategies, cards, info);
+    strategies(losers(:)) = [];
+    strategies = multiply(strategies, players);
+    
+    ages_temp = ages(i,:);
+    ages_temp = ages_temp + 1;
+    ages_temp(losers(:)) = [];
+    ages_temp = [ages_temp, ones(1, individuals * (players-1) / players)];
+    ages(i+1,:) = ages_temp;
+    
+    durations(i) = toc(t);
+    fprintf('finished generation %d - %.1f seconds\n', i, durations(i))
 end
 
-individuals = 100;
-iterations = 100;
+figure(1), plot(1:generations, durations, '-o'), xlabel('generation'), ylabel('generation time (s)')
 
-S = strategy(individuals, players);
-pointsmatrix = nan(iterations, individuals - rem(individuals, players)); % WHAT IS THIS?
-for i = 1:iterations
-    losers = []; % WHAT IS THIS?
-    iterationpoints = []; % WHAT IS THIS?
-    for j = 1:players:individuals
-        if j + players > individuals; continue; end
-        s = S(j:j+players-1); % choose this individual's strategies
-        [points, winner] = ticket(s, players);
-        losers = [losers, find(winner ~= 1:players) + j - 1]; %#ok<AGROW> % indices of individuals who lost
-        iterationpoints = [iterationpoints; points]; %#ok<AGROW>
-    end
-    pointsmatrix(i,:) = iterationpoints(:)';
-    S(losers) = []; % kill losers
-    nkids = floor((individuals - length(S)) / 2);
-    pairs = randperm(length(S));
-    for j = 1:2:length(pairs)
-        S(end+1:end+nkids) = multiply(S(pairs([j, j+1])), nkids, players);
-    end
-    S = S(randperm(length(S)));
-    disp('finished iteration')
-end
+figure(2), clf
+subplot(2,1,1), plot(1:generations, mean(winnerpoints, 2), '-o'), xlabel('generation'), ylabel('average winner points')
+subplot(2,1,2), plot(1:generations, max(winnerpoints, [], 2), '-o'), xlabel('generation'), ylabel('max winner points')
 
-plot(pointsmatrix)
+figure(3), clf
+subplot(2,1,1), plot(1:generations+1, mean(ages(:,1:individuals/players), 2), '-o'), xlabel('generation'), ylabel('average parent age')
+subplot(2,1,2), plot(1:generations+1, max(ages, [], 2), 'o'), xlabel('generation'), ylabel('max parent age')
+
+save('strategies', 'strategies')
 
 keyboard

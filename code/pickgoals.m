@@ -1,28 +1,18 @@
-function cards = pickgoals(turn, cards, s)
+function cards = pickgoals(turn, cards)
 
-if isempty(cards.playergoals{turn})
-    setup = true;
-else
-    setup = false;
+% adds a field which indicates who owns that goalcard
+if ~any(ismember(cards.goalcards.Properties.VariableNames, 'player'))
+    cards.goalcards.player = zeros(height(cards.goalcards),1);
 end
 
-for i = 1:2 % pick up 3 cards
-    if height(cards.goalcards) == 0
+for i = 1:2 % pick up 3 cards?
+    if all(cards.goalcards.player ~= 0)
         break
     end
-    cards.playergoals{turn}{end+1} = {char(cards.goalcards.from(i)), char(cards.goalcards.to(i)), cards.goalcards.value(i)};
+    ind = randi(height(cards.goalcards));
+    while cards.goalcards.player(ind) ~= 0
+        ind = randi(height(cards.goalcards));
+    end
+    cards.playergoals{turn}{end+1} = {char(cards.goalcards.from(ind)), char(cards.goalcards.to(ind)), cards.goalcards.value(ind)};
+    cards.goalcards.player(ind) = turn;
 end
-
-cards.goalcards(1:2,:) = [];
-
-if setup % must keep at least 2
-    % add some aggressiveness strategy
-else % must keep at least 1
-    % add some aggressiveness strategy
-end
-
-% % discard one of the cards
-% cards.goalcards.from{end+1} = cards.playergoals{turn}{end}{1};
-% cards.goalcards.to{end} = cards.playergoals{turn}{end}{2};
-% cards.goalcards.value(end) = cards.playergoals{turn}{end}{3};
-% cards.playergoals{turn}(end) = [];
