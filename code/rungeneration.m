@@ -1,4 +1,4 @@
-function [winnerpoints, losers] = rungeneration(G, strategies, cards, info)
+function [winnerpoints, losers] = rungeneration(G, strategies, cards, info, numworkers)
 
 players = info.players;
 individuals = length(strategies);
@@ -8,11 +8,8 @@ winnerpoints = nan(1,individuals/players);
 losers = nan(individuals/players, players-1);
 matchups = reshape(order, [individuals/players,players]);
 strategies = reshape(strategies, [individuals/players,players]);
-if isempty(gcp('nocreate'))
+if nargin < 5
     numworkers = 0;
-else
-    pool = gcp;
-    numworkers = pool.NumWorkers;
 end
 parfor (i = 1:individuals/players, numworkers) % scroll through each matchup
     gameplayers = matchups(i,:); % choose first 3 of random perm

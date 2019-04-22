@@ -2,30 +2,45 @@ function [] = population
 
 %#ok<*AGROW>
 
-rng(2)
+rng(3)
 
-individuals = 6;
-generations = 15000;
+individuals = 120;
+generations = 2000;
 players = 3; % players per game - 1 lives on
 
 [G, cards, info] = setupgame(players);
 
-for i = 1:individuals
+h = waitbar(0, 'Testing parallel computing toolbox...');
+
+ncores = feature('numcores');
+if ncores > 2
+    if isempty(gcp('nocreate'))
+        parpool(ncores - 1);
+        numworkers = ncores - 1;
+    else
+        pool = gcp;
+        numworkers = pool.NumWorkers;
+    end
+else
+    numworkers = 0;
+end
+
+h = waitbar(0, h, 'Randomizing network weights');
+
+parfor (i = 1:individuals, numworkers)
     strategies(i) = strategy(G, cards);
 end
 % load('strategies', 'strategies')
 
-ncores = feature('numcores');
-if ncores > 2
-    parpool(ncores - 1);
-end
-
 winnerpoints = nan(generations,individuals/players);
 durations = nan(generations,1);
 ages = ones(generations,individuals);
-h = waitbar(0, 'Calculating time remaining...');
+
+str = sprintf('Finished generation %d of %d (%.2f%%)\nEstimating time remaining...', 0, generations, 0);
 tstart = tic;
+
 for i = 1:generations
+    h = waitbar((i-1)/generations, h, str);
     t = tic;
     
     [winnerpoints(i,:), losers] = rungeneration(G, strategies, cards, info);
@@ -39,9 +54,8 @@ for i = 1:generations
     ages(i+1,:) = ages_temp;
     
     durations(i) = toc(t);
-    str = sprintf('generation %d of %d (%.2f%%)\n%s', i, generations, 100*i/generations, timeremaining(i, generations, tstart, true));
-    waitbar(i/generations, h, str)
-%     fprintf('finished generation %d - %.1f seconds\n', i, durations(i))
+    str = sprintf('Finished generation %d of %d (%.2f%%)\n%s', i, generations, 100*i/generations, timeremaining(i, generations, tstart, true));
+    h = waitbar(i/generations, h, str);
 end
 delete(h)
 

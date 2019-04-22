@@ -13,7 +13,7 @@ npickgoal = 1;
 npickface = 5;
 npickrand = 1;
 
-featureunits = 1000; % per feature type (color, distance, owner)
+featureunits = 500; % per feature type (color, distance, owner)
 fullunits = 1000;
 compressionunits = 100;
 decisionunits = npickgoal + npickface + npickrand + nedges;
