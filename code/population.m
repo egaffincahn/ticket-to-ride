@@ -4,8 +4,8 @@ function [] = population
 
 rng(2)
 
-individuals = 12;
-generations = 2;
+individuals = 6;
+generations = 15000;
 players = 3; % players per game - 1 lives on
 
 [G, cards, info] = setupgame(players);
@@ -15,9 +15,16 @@ for i = 1:individuals
 end
 % load('strategies', 'strategies')
 
+ncores = feature('numcores');
+if ncores > 2
+    parpool(ncores - 1);
+end
+
 winnerpoints = nan(generations,individuals/players);
 durations = nan(generations,1);
 ages = ones(generations,individuals);
+h = waitbar(0, 'Calculating time remaining...');
+tstart = tic;
 for i = 1:generations
     t = tic;
     
@@ -32,8 +39,11 @@ for i = 1:generations
     ages(i+1,:) = ages_temp;
     
     durations(i) = toc(t);
-    fprintf('finished generation %d - %.1f seconds\n', i, durations(i))
+    str = sprintf('generation %d of %d (%.2f%%)\n%s', i, generations, 100*i/generations, timeremaining(i, generations, tstart, true));
+    waitbar(i/generations, h, str)
+%     fprintf('finished generation %d - %.1f seconds\n', i, durations(i))
 end
+delete(h)
 
 figure(1), plot(1:generations, durations, '-o'), xlabel('generation'), ylabel('generation time (s)')
 
