@@ -20,7 +20,7 @@ for i = 1:length(parents)/2
             
             % mutate some weights
             mutations = rand(sz) < .01;
-            weights(mutations) = randn(sum(mutations(:)),1);
+            weights(mutations) = rande([sum(mutations(:)),1]);
             
             child.(fnames{f}) = weights;
         end

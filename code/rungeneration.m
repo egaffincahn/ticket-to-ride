@@ -7,7 +7,7 @@ winnerpoints = nan(1,individuals/players);
 
 losers = nan(individuals/players, players-1);
 matchups = reshape(order, [individuals/players,players]);
-strategies = reshape(strategies, [individuals/players,players]);
+strategies = reshape(strategies(order), [individuals/players,players]);
 if nargin < 5
     numworkers = 0;
 end

@@ -1,10 +1,10 @@
 function actionvalues = graphnet(W, G, cards, info, turn)
 
 % state (inputs)
-input.color = G.color.Edges.Weight;
-input.distance = G.distance.Edges.Weight;
+input.color = inputcolor;%G.color.Edges.Weight;%
+input.distance = inputdistance;%G.distance.Edges.Weight;%
 input.taken = G.taken.Edges.Weight;
-input.goals = cards.goalcards.value .* (cards.goalcards.player == turn);
+input.goals = cards.goalcards.value .* (cards.goalcards.player == turn); % couldn't speed this up
 handcolors = sum(cards.hand{turn} == (0:8)', 2);
 facecolors = sum(cards.faceup == (0:8)', 2);
 input.cards = [handcolors; facecolors];
@@ -103,3 +103,165 @@ g = max(z, 0);
 
 function g = softmax(z)
 g = exp(z) ./ sum(exp(z));
+
+function c = inputcolor
+c = [
+    0
+    0
+    0
+    0
+    1
+    0
+    3
+    5
+    6
+    4
+    6
+    2
+    7
+    5
+    3
+    4
+    1
+    2
+    0
+    0
+    8
+    8
+    0
+    0
+    0
+    4
+    7
+    4
+    0
+    6
+    3
+    0
+    7
+    8
+    0
+    0
+    0
+    5
+    7
+    1
+    6
+    0
+    0
+    0
+    0
+    0
+    0
+    6
+    8
+    0
+    0
+    6
+    0
+    3
+    0
+    3
+    8
+    0
+    0
+    5
+    5
+    3
+    7
+    2
+    6
+    4
+    0
+    0
+    0
+    8
+    1
+    0
+    0
+    0
+    0
+    5
+    8
+    7];
+
+function d = inputdistance
+d = [     
+    1
+    3
+    4
+    1
+    6
+    4
+    6
+    5
+    6
+    3
+    4
+    6
+    5
+    4
+    5
+    3
+    3
+    3
+    2
+    3
+    6
+    4
+    6
+    2
+    3
+    6
+    3
+    4
+    1
+    4
+    5
+    2
+    4
+    4
+    3
+    3
+    2
+    6
+    4
+    5
+    3
+    1
+    2
+    2
+    2
+    2
+    2
+    2
+    5
+    2
+    3
+    3
+    2
+    4
+    2
+    2
+    3
+    2
+    2
+    5
+    3
+    3
+    6
+    4
+    5
+    4
+    1
+    2
+    2
+    3
+    4
+    2
+    2
+    2
+    2
+    2
+    2
+    2];

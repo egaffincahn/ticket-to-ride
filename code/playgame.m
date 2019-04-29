@@ -4,7 +4,6 @@ if nargin < 5
     doplot = false;
 end
     
-
 t = tic;
 
 players = length(s);
