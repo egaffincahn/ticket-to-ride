@@ -1,3 +1,4 @@
 *.m~
 strategies.mat
-.gitignore
+.DS_Store
+._*
