@@ -28,7 +28,7 @@ switch from
         cards2move = cards.hand{turn}(ind);
         cards.hand{turn}(ind) = [];
     case 'discards' % to deck
-        cards2move = Shuffle(cards.discards(ind));
+        cards2move = shuffle(cards.discards(ind));
         cards.discards = [];
 end
 
@@ -66,3 +66,6 @@ if sum(ismember(db(2,:), 'movecards')) == 1 && (... % when we're supposed to be 
         (110 ~= length(cards.deck) + length(cards.discards) + length(cards.faceup) + sum(cellfun(@length, cards.hand))))
     keyboard
 end
+
+function x = shuffle(x)
+x = x(randperm(length(x)));
