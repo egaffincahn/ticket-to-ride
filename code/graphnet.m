@@ -1,6 +1,33 @@
 function actionvalues = graphnet(W, G, cards, info, turn)
 
 % state (inputs)
+nnodes = G.distance.numnodes;
+nedges = G.distance.numedges;
+ngoals = height(cards.goalcards);
+nfeatures = 3; % distance, color, owner
+X = zeros(nnodes, ngoals);
+for i = 1:ngoals
+    if cards.goalcards.player(i) == turn
+        noderows = ismember(table2cell(G.distance.Nodes), table2cell(cards.goalcards(i,1:2)));
+        X(noderows, i) = cards.goalcards.value(i);
+    end
+end
+
+E = zeros(nnodes, nnodes, nfeatures);
+E(:,:,1) = full(adjacency(G.distance, 'weighted'));
+E(:,:,2) = full(adjacency(G.color, 'weighted'));
+opponentcount = 0;
+for i = 1:info.players
+    owned = full(adjacency(G.taken, 'weighted')) == i;
+    if i ~= turn
+        opponentcount = opponentcount - 1;
+        owned = owned * opponentcount;
+    end
+    E(:,:,3) = E(:,:,3) + owned;
+end
+
+
+% state (inputs)
 input.color = inputcolor;%G.color.Edges.Weight;%
 input.distance = inputdistance;%G.distance.Edges.Weight;%
 input.taken = G.taken.Edges.Weight;
