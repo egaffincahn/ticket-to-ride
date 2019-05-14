@@ -16,31 +16,23 @@ end
 E = zeros(nnodes, nnodes, nfeatures);
 E(:,:,1) = full(adjacency(G.distance, 'weighted'));
 E(:,:,2) = full(adjacency(G.color, 'weighted'));
-opponentcount = 0;
-for i = 1:info.players
-    owned = full(adjacency(G.taken, 'weighted')) == i;
-    if i ~= turn
-        opponentcount = opponentcount - 1;
-        owned = owned * opponentcount;
-    end
-    E(:,:,3) = E(:,:,3) + owned;
+E(:,:,3) = E(:,:,3) + full(adjacency(G.taken, 'weighted')) == turn;
+for i = find(1:info.players ~= turn)
+    E(:,:,3) = E(:,:,3) - i * (full(adjacency(G.taken, 'weighted')) == i);
 end
+E = normalize(E);
 
 
 % state (inputs)
-input.color = inputcolor;%G.color.Edges.Weight;%
-input.distance = inputdistance;%G.distance.Edges.Weight;%
-input.taken = G.taken.Edges.Weight;
-input.goals = cards.goalcards.value .* (cards.goalcards.player == turn); % couldn't speed this up
 handcolors = sum(cards.hand{turn} == (0:8)', 2);
 facecolors = sum(cards.faceup == (0:8)', 2);
 input.cards = [handcolors; facecolors];
 
 % feature layer
-layer.features = tanh([ ...
-    [1; zcards(input.cards); zcolor(input.color)]' * W(turn).color, ...
-    [1; zdistance(input.distance)]' * W(turn).distance, ...
-    [1; ztaken(input.taken)]' * W(turn).taken]);
+% layer.features = tanh([ ...
+%     [1; zcards(input.cards); zcolor(input.color)]' * W(turn).color, ...
+%     [1; zdistance(input.distance)]' * W(turn).distance, ...
+%     [1; ztaken(input.taken)]' * W(turn).taken]);
 
 % city layer
 layer.cities = tanh(...
@@ -110,6 +102,18 @@ while ~any(actionvalues > 0)
     end
 end
 
+% how is this supposed to work if no edge means E(i,j,:) = 0 but all E > 0
+% (eq 1, Gong & Cheng 2018)
+function E = normalize(E_hat)
+nnodes = size(E_hat,1);
+E_tilde = E_hat ./ sum(E_hat,2);
+E_tilde(isnan(E_tilde)) = 0;
+E = zeros(size(E_hat));
+for i = 1:nnodes
+    E(i,:,:) = sum(E_tilde(i,:,:) .* E_tilde ./ sum(E_tilde, 1), 2);
+end
+E(isnan(E)) = 0;
+
 function z = zcolor(x)
 z = (x - 4.5) / 4.5;
 
@@ -130,165 +134,3 @@ g = max(z, 0);
 
 function g = softmax(z)
 g = exp(z) ./ sum(exp(z));
-
-function c = inputcolor
-c = [
-    0
-    0
-    0
-    0
-    1
-    0
-    3
-    5
-    6
-    4
-    6
-    2
-    7
-    5
-    3
-    4
-    1
-    2
-    0
-    0
-    8
-    8
-    0
-    0
-    0
-    4
-    7
-    4
-    0
-    6
-    3
-    0
-    7
-    8
-    0
-    0
-    0
-    5
-    7
-    1
-    6
-    0
-    0
-    0
-    0
-    0
-    0
-    6
-    8
-    0
-    0
-    6
-    0
-    3
-    0
-    3
-    8
-    0
-    0
-    5
-    5
-    3
-    7
-    2
-    6
-    4
-    0
-    0
-    0
-    8
-    1
-    0
-    0
-    0
-    0
-    5
-    8
-    7];
-
-function d = inputdistance
-d = [     
-    1
-    3
-    4
-    1
-    6
-    4
-    6
-    5
-    6
-    3
-    4
-    6
-    5
-    4
-    5
-    3
-    3
-    3
-    2
-    3
-    6
-    4
-    6
-    2
-    3
-    6
-    3
-    4
-    1
-    4
-    5
-    2
-    4
-    4
-    3
-    3
-    2
-    6
-    4
-    5
-    3
-    1
-    2
-    2
-    2
-    2
-    2
-    2
-    5
-    2
-    3
-    3
-    2
-    4
-    2
-    2
-    3
-    2
-    2
-    5
-    3
-    3
-    6
-    4
-    5
-    4
-    1
-    2
-    2
-    3
-    4
-    2
-    2
-    2
-    2
-    2
-    2
-    2];
