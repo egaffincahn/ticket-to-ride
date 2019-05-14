@@ -27,51 +27,44 @@ end
 
 h = waitbar(0, h, 'Randomizing network weights');
 
-parfor (i = 1:individuals, numworkers)
-    strategies(i) = strategy(G, cards);
-end
-% load('strategies', 'strategies')
-
-ages = zeros(individuals,1);
-
-fid = fopen('log.csv', 'w');
-fprintf(fid, 'generation,duration,mean_winner_points,max_winner_points,mean_parent_age,max_parent_age\n');
+winnerpoints = nan(generations,individuals/players);
+durations = nan(generations,1);
+ages = ones(generations,individuals);
+tau = 10000+(1:individuals);
 
 str = sprintf('Finished generation %d of %d (%.2f%%)\nEstimating time remaining...', 0, generations, 0);
 tstart = tic;
 
-for g = 1:generations
-    ages = ages + 1;
-    h = waitbar((g-1)/generations, h, str);
+for i = 1:generations
+    h = waitbar((i-1)/generations, h, str);
     t = tic;
     
-    [winnerpoints, losers] = rungeneration(G, strategies, cards, info, numworkers);
-    strategies(losers(:)) = [];
-    strategies = multiply(strategies, players);
+    [gamepoints, tau] = rungeneration_tau(G, cards, info, tau, numworkers);
+    tau = checkelite(i, gamepoints, tau);
+    tau = multiply_tau(tau, players);
     
-    ages(losers(:)) = [];
-    ages = [ages; zeros(individuals * (players-1) / players, 1)];
+    ages_temp = ages(i,:);
+    ages_temp = ages_temp + 1;
+    ages_temp(losers(:)) = [];
+    ages_temp = [ages_temp, ones(1, individuals * (players-1) / players)];
+    ages(i+1,:) = ages_temp;
     
-    fprintf(fid, '%d,%.1f,%.1f,%d,%.1f,%d\n', ...
-        g, toc(t), ...
-        mean(winnerpoints), max(winnerpoints), ...
-        mean(ages(1:individuals/players)), max(ages(1:individuals/players)));
-    str = sprintf('Finished generation %d of %d (%.2f%%)\n%s', g, generations, 100*g/generations, timeremaining(g, generations, tstart, true));
-    h = waitbar(g/generations, h, str);
+    durations(i) = toc(t);
+    str = sprintf('Finished generation %d of %d (%.2f%%)\n%s', i, generations, 100*i/generations, timeremaining(i, generations, tstart, true));
+    h = waitbar(i/generations, h, str);
 end
 delete(h)
 
-% figure(1), plot(1:generations, durations, '-o'), xlabel('generation'), ylabel('generation time (s)')
+figure(1), plot(1:generations, durations, '-o'), xlabel('generation'), ylabel('generation time (s)')
 
-% figure(2), clf
-% subplot(2,1,1), plot(1:generations, mean(winnerpoints, 2), '-o'), xlabel('generation'), ylabel('average winner points')
-% subplot(2,1,2), plot(1:generations, max(winnerpoints, [], 2), '-o'), xlabel('generation'), ylabel('max winner points')
+figure(2), clf
+subplot(2,1,1), plot(1:generations, mean(winnerpoints, 2), '-o'), xlabel('generation'), ylabel('average winner points')
+subplot(2,1,2), plot(1:generations, max(winnerpoints, [], 2), '-o'), xlabel('generation'), ylabel('max winner points')
 
-% figure(3), clf
-% subplot(2,1,1), plot(1:generations+1, mean(ages(:,1:individuals/players), 2), '-o'), xlabel('generation'), ylabel('average parent age')
-% subplot(2,1,2), plot(1:generations+1, max(ages, [], 2), 'o'), xlabel('generation'), ylabel('max parent age')
+figure(3), clf
+subplot(2,1,1), plot(1:generations+1, mean(ages(:,1:individuals/players), 2), '-o'), xlabel('generation'), ylabel('average parent age')
+subplot(2,1,2), plot(1:generations+1, max(ages, [], 2), 'o'), xlabel('generation'), ylabel('max parent age')
 
-fclose(fid);
 save('strategies', 'strategies')
 
 keyboard

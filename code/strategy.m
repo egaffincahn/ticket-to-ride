@@ -1,5 +1,8 @@
-function s = strategy(G, cards)
+function s = strategy(G, cards, taulineage)
 
+tau = f(taulineage);
+
+rng(tau)
 
 edges = G.distance.Edges.EndNodes;
 cities = G.distance.Nodes;
@@ -42,3 +45,7 @@ s.full2 = rande([compressionunits + 1, fullunits]);
 
 % weights onto the output decision layer
 s.decisions = rande([fullunits + 1, decisionunits]);
+
+function y = rande(sz)
+epsilon = 0.1;
+y = rand(sz) * epsilon * 2 - epsilon;

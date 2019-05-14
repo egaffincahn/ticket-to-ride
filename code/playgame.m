@@ -1,4 +1,4 @@
-function [points, winner] = playgame(G, s, cards, info, doplot)
+function points = playgame(G, tau, cards, info, doplot)
 
 if nargin < 5
     doplot = false;
@@ -6,7 +6,11 @@ end
     
 t = tic;
 
-players = length(s);
+players = info.players;
+
+for i = 1:players
+    strategies(i) = strategy_tau(G, cards, tau(i));
+end
 
 cards = movecards([], cards, 'deck', 'faceup', 1:5); % put first 5 face up
 for turn = 1:players
@@ -24,7 +28,7 @@ while all(info.pieces > 2) % go until someone has 2 or fewer pieces
     if info.rounds > 100
         keyboard
     end
-    [G, cards, info] = doturn(turn, G, cards, info, s, doplot);
+    [G, cards, info] = doturn(turn, G, cards, info, strategies, doplot);
     turn = turn + 1;
     if turn > players
         turn = 1;
@@ -35,7 +39,7 @@ end
 
 for i = 1:players
     % they should lay down longest they have because it's almost over
-    [G, cards, info] = doturn(turn, G, cards, info, s, doplot);
+    [G, cards, info] = doturn(turn, G, cards, info, strategies, doplot);
     turn = turn + 1;
     if turn > players % back around the table
         turn = 1;
