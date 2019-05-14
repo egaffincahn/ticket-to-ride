@@ -102,18 +102,6 @@ while ~any(actionvalues > 0)
     end
 end
 
-% how is this supposed to work if no edge means E(i,j,:) = 0 but all E > 0
-% (eq 1, Gong & Cheng 2018)
-function E = normalize(E_hat)
-nnodes = size(E_hat,1);
-E_tilde = E_hat ./ sum(E_hat,2);
-E_tilde(isnan(E_tilde)) = 0;
-E = zeros(size(E_hat));
-for i = 1:nnodes
-    E(i,:,:) = sum(E_tilde(i,:,:) .* E_tilde ./ sum(E_tilde, 1), 2);
-end
-E(isnan(E)) = 0;
-
 function z = zcolor(x)
 z = (x - 4.5) / 4.5;
 
