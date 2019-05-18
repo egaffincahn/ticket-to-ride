@@ -1,0 +1,101 @@
+from,to,distance,color
+Vancouver,Seattle,1,0
+Vancouver,Seattle,1,0
+Vancouver,Calgary,3,0
+Seattle,Portland,1,0
+Seattle,Portland,1,0
+Seattle,Helena,6,1
+Seattle,Calgary,4,0
+Portland,San Francisco,5,4
+Portland,San Francisco,5,5
+Portland,Salt Lake City,6,6
+San Francisco,Salt Lake City,5,2
+San Francisco,Salt Lake City,5,3
+San Francisco,Los Angeles,3,1
+San Francisco,Los Angeles,3,4
+Calgary,Helena,4,0
+Calgary,Winnipeg,6,3
+Helena,Winnipeg,4,6
+Helena,Duluth,6,2
+Helena,Omaha,5,7
+Helena,Denver,4,5
+Helena,Salt Lake City,3,4
+Salt Lake City,Denver,3,1
+Salt Lake City,Denver,3,7
+Salt Lake City,Las Vegas,3,2
+Las Vegas,Los Angeles,2,0
+Los Angeles,Phoenix,3,0
+Los Angeles,El Paso,6,8
+Phoenix,El Paso,3,0
+Phoenix,Santa Fe,3,0
+Phoenix,Denver,5,3
+El Paso,Houston,6,5
+El Paso,Dallas,4,7
+El Paso,Oklahoma City,5,1
+El Paso,Santa Fe,2,0
+Santa Fe,Oklahoma City,3,6
+Santa Fe,Denver,2,0
+Denver,Oklahoma City,4,7
+Denver,Kansas City,4,2
+Denver,Kansas City,4,8
+Denver,Omaha,4,4
+Winnipeg,Sault St. Marie,6,0
+Winnipeg,Duluth,4,8
+Sault St. Marie,Montreal,5,8
+Sault St. Marie,Toronto,2,0
+Sault St. Marie,Duluth,3,0
+Duluth,Toronto,6,4
+Duluth,Chicago,3,7
+Duluth,Omaha,2,0
+Duluth,Omaha,2,0
+Omaha,Chicago,4,6
+Omaha,Kansas City,1,0
+Omaha,Kansas City,1,0
+Kansas City,Saint Louis,2,4
+Kansas City,Saint Louis,2,6
+Kansas City,Oklahoma City,2,0
+Kansas City,Oklahoma City,2,0
+Oklahoma City,Little Rock,2,0
+Oklahoma City,Dallas,2,0
+Oklahoma City,Dallas,2,0
+Dallas,Little Rock,2,0
+Dallas,Houston,1,0
+Dallas,Houston,1,0
+Houston,New Orleans,2,0
+New Orleans,Miami,6,7
+New Orleans,Atlanta,4,5
+New Orleans,Atlanta,4,2
+New Orleans,Little Rock,3,5
+Little Rock,Saint Louis,2,0
+Little Rock,Nashville,3,3
+Miami,Charleston,4,4
+Miami,Atlanta,5,6
+Atlanta,Charleston,2,0
+Atlanta,Raleigh,2,0
+Atlanta,Raleigh,2,0
+Atlanta,Nashville,1,0
+Nashville,Saint Louis,2,0
+Nashville,Pittsburgh,4,1
+Nashville,Raleigh,3,8
+Raleigh,Charleston,2,0
+Raleigh,Pittsburgh,2,0
+Raleigh,Washington,2,0
+Raleigh,Washington,2,0
+Saint Louis,Pittsburgh,5,5
+Saint Louis,Chicago,2,3
+Saint Louis,Chicago,2,5
+Chicago,Toronto,4,3
+Chicago,Pittsburgh,3,2
+Chicago,Pittsburgh,3,8
+Pittsburgh,Toronto,2,0
+Pittsburgh,New York,2,3
+Pittsburgh,New York,2,5
+Pittsburgh,Washington,2,0
+Washington,New York,2,2
+Washington,New York,2,8
+New York,Boston,2,1
+New York,Boston,2,7
+Montreal,Toronto,3,0
+Montreal,New York,3,6
+Montreal,Boston,2,0
+Montreal,Boston,2,0
