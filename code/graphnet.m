@@ -6,11 +6,11 @@ nedges = G.distance.numedges;
 ngoals = height(cards.goalcards);
 nedgefeatures = 3; % edge features: distance, color, owner
 nnodefeatures = ngoals;
-X_in = zeros(nnodes, nnodefeatures);
+X = zeros(nnodes, nnodefeatures);
 for i = 1:nnodefeatures
     if cards.goalcards.player(i) == turn
         noderows = ismember(table2cell(G.distance.Nodes), table2cell(cards.goalcards(i,1:2)));
-        X_in(noderows, i) = cards.goalcards.value(i);
+        X(noderows, i) = cards.goalcards.value(i);
     end
 end
 
@@ -23,30 +23,19 @@ for i = find(1:info.players ~= turn)
 end
 E = normalize(E);
 
-% eq (7)
-W(turn).features = rande([nnodefeatures, nnodefeatures]);
-a = 0;
-for p = 1:nedgefeatures
-    
-    out(:,:,p) = E(:,:,p) * X_in * W(turn).features;
-    
-%     %     a = alpha(X, E(:,:,p));
-%     for i = 1:nnodes
-%         for j = 1:nnodes
-%             f = exp(relu(...
-%                 [X(i,:) * W(turn).features, X(j,:) * W(turn).features], ...
-%                 a));
-%             a(i,j,p) = f(X(i,:), X(j,:)) * E(i,j,p);
-%         end
-%     end
-%     a(:,:,p) = normalize(a(:,:,p));
+adj = full(adjacency(G.distance));
+for l = 1:4
+    subplot(2,3,l), mesh(X)
+    W(turn).features(:,:,l,1) = rande([nnodefeatures, nnodefeatures]); % Wi
+    W(turn).features(:,:,l,2) = rande([nnodefeatures, nnodefeatures]); % Wj
+    [X, E] = layer(X, E, W(turn).features(:,:,l,:), adj);
 end
-keyboard
+subplot(2,3,l+1), mesh(X)
 
 
 % % state (inputs)
-% handcolors = sum(cards.hand{turn} == (0:8)', 2);
-% facecolors = sum(cards.faceup == (0:8)', 2);
+handcolors = sum(cards.hand{turn} == (0:8)', 2);
+facecolors = sum(cards.faceup == (0:8)', 2);
 % input.cards = [handcolors; facecolors];
 % 
 % % feature layer
@@ -124,15 +113,8 @@ keyboard
 % end
 
 
-function a = alpha(x, e, a)
-if nargin < 3; a = 1; end
-nnodes = size(x,1);
-for i = 1:nnodes
-    for j = 1:nnodes
-        a(i,j) = f(x(i,:), x(j,:)) * e(i,j);
-    end
-end
-a = normalize(a);
+function a = attention(xi, xj, Wi, Wj)
+a = exp((xi * Wi) * (xj * Wj)');
 
 
 function g = relu(z, a)
@@ -140,21 +122,41 @@ if nargin < 2; a = 0; end
 g = max(z, z * a);
 
 
-function g = softmax(z)
-g = exp(z) ./ sum(exp(z));
+function [X_, E_] = layer(X, E, W, adj)
 
-% function z = zcolor(x)
-% z = (x - 4.5) / 4.5;
-% 
-% function g = zcards(z)
-% g = (z - 5) / 5;
-% 
-% function z = zdistance(x)
-% z = (x - 3.5) / 3.5;
-% 
-% function z = ztaken(x)
-% z = x - 2;
-% 
-% function z = zgoals(x)
-% z = (x - 11.5) / 11.5;
+nnodes = size(X,1);
+nnodefeatures = size(X,2);
+nedgefeatures = size(E,3);
 
+% from eq (3) of Gong & Cheng (2018) v1
+% calculate alpha, the attention coefficient from X, E
+alpha = nan(size(E));
+for j = 1:nnodes
+    C = zeros(nnodes,nedgefeatures) + sqrt(eps);
+    for i = 1:nnodes
+        for p = 1:nedgefeatures
+            f = attention(X(i,:), X(j,:), W(:,:,:,1), W(:,:,:,2));
+            if adj(i,j)%any(j == neighbors(G.distance, i))
+                C(i,p) = C(i,p) + sum(f * E(i,j,p));
+            end
+            alpha(i,j,p) = f * E(i,j,p);
+        end
+    end
+    alpha(:,j,:) = squeeze(alpha(:,j,:)) ./ C;
+end
+
+% from eq (1) of Gong & Cheng (2018) v1
+% calculate X(l) from alpha and X(l-1)
+X_ = nan(size(X));
+for i = 1:nnodes
+    a = zeros(1,nnodefeatures);
+    for p = 1:nedgefeatures
+        for j = find(adj(i,:))%neighbors(G.distance, i)'
+            a = a + alpha(i,j,p) * X(j,:) * W(:,:,:,2);
+        end
+        ap(:,p) = a; % ... save these for concatenation function
+    end
+    X_(i,:) = relu(mean(ap,2)); % how can I concatenate these? dimensions don't make sense
+end
+
+E_ = alpha;
