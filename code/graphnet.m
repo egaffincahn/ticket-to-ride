@@ -6,14 +6,22 @@ nedges = G.distance.numedges;
 ngoals = height(cards.goalcards);
 nedgefeatures = 3; % edge features: distance, color, owner
 nnodefeatures = ngoals;
-X_in = zeros(nnodes, nnodefeatures);
+
+% X0: input matrix, row nodes x columns features (each column is a goal)
+% Matrix of 0s, except where the player has a goal card. For a single goal
+% card, the two cities (nodes) are represented in their corresponding row
+% with the number of points earned for completing that goal.
+X0 = zeros(nnodes, nnodefeatures);
 for i = 1:nnodefeatures
     if cards.goalcards.player(i) == turn
         noderows = ismember(table2cell(G.distance.Nodes), table2cell(cards.goalcards(i,1:2)));
-        X_in(noderows, i) = cards.goalcards.value(i);
+        X0(noderows, i) = cards.goalcards.value(i);
     end
 end
 
+% E: edge feature matrix, row nodes x column nodes x depth features
+% If two cities are not connected, the feature vector in depth is all 0s.
+% Features are distance, color, owner (if any).
 E = zeros(nnodes, nnodes, nedgefeatures);
 E(:,:,1) = full(adjacency(G.distance, 'weighted'));
 E(:,:,2) = full(adjacency(G.color, 'weighted'));
@@ -25,22 +33,19 @@ E = normalize(E);
 
 % eq (7)
 W(turn).features = rande([nnodefeatures, nnodefeatures]);
-a = 0;
+% X1 = zeros(nnod);
 for p = 1:nedgefeatures
-    
-    out(:,:,p) = E(:,:,p) * X_in * W(turn).features;
-    
-%     %     a = alpha(X, E(:,:,p));
-%     for i = 1:nnodes
-%         for j = 1:nnodes
-%             f = exp(relu(...
-%                 [X(i,:) * W(turn).features, X(j,:) * W(turn).features], ...
-%                 a));
-%             a(i,j,p) = f(X(i,:), X(j,:)) * E(i,j,p);
-%         end
-%     end
-%     a(:,:,p) = normalize(a(:,:,p));
+    X1(:,:,p) = E(:,:,p) * X0 * W(turn).features;
 end
+X1 = relu(X1);
+
+% Current problem #1: I don't understand: X is supposed to be NxF, why is it
+% being concatenated along an edge feature dimension? Should the
+% nonlinearity combine across the edge features?
+
+% Problem #2: how to input the cards (in hand and faceup) into the
+% calculation of E?
+
 keyboard
 
 
@@ -124,15 +129,15 @@ keyboard
 % end
 
 
-function a = alpha(x, e, a)
-if nargin < 3; a = 1; end
-nnodes = size(x,1);
-for i = 1:nnodes
-    for j = 1:nnodes
-        a(i,j) = f(x(i,:), x(j,:)) * e(i,j);
-    end
-end
-a = normalize(a);
+% function a = alpha(x, e, a)
+% if nargin < 3; a = 1; end
+% nnodes = size(x,1);
+% for i = 1:nnodes
+%     for j = 1:nnodes
+%         a(i,j) = f(x(i,:), x(j,:)) * e(i,j);
+%     end
+% end
+% a = normalize(a);
 
 
 function g = relu(z, a)
