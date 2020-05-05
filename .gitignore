@@ -4,5 +4,6 @@ strategies.mat
 ._*
 map_debug.txt
 test.py
-__pycache__
-*.pyc
+python/__pycache__/
+python/venv/
+python/.idea/
