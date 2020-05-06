@@ -1,37 +1,28 @@
-# separate files
-# class individual
 # raise exception
-# SPEED UP
-    # get random weights once - should have a function that uses number_of_cluster_reps to return number of total weights
+# new logging levels
 # necessary:
     # add longest road
-    #
 
-import networkx as nx
-import numpy as np
 from datetime import datetime as dt
-from utils import *
-import ticket_to_ride.game as game
+import logging
+import numpy as np
+from genetic import run_all
 
-# http://cs231n.github.io/python-numpy-tutorial/
-# https://numpy.org/devdocs/user/numpy-for-matlab-users.html
-# exec(open('ticket_to_ride.py').read())
+def main():
 
-# python3 -m cProfile -s 'cumtime' ticket_to_ride.py > profile.txt
-# cProfile.run('play_game(players)')
-#
+    individuals = 99
+    generations = 500
 
-players = 3
-plot = True
+    players = 3
+    plot = False
 
-# fobj = open('log.txt', 'w')
-log = Log()
-log.open()
-log.write(['started at ', dt.now()])
-# utils.write_log(cmd='open', file='log.txt')
-# utils.write_log(lines=['started at ', dt.now()])
-game_map, game_info, game_cards, game_strategies = game.play_game(players, plot)
-# utils.write_log(fobj=fobj, lines=['finished at ', dt.now()])
-# fobj.close()
-# utils.write_log(fobj=fobj, cmd='close')
-print('finished')
+    logging.basicConfig(filename='log.txt', filemode='w', format='%(message)s', level=logging.CRITICAL)
+    logging.critical('started at %s', str(dt.now()))
+
+    points = run_all(generations, individuals, players)
+    logging.critical('finished generations, points:\n%s', np.array_str(points))
+    logging.critical('finished at %s', str(dt.now()))
+    print('finished')
+
+if __name__ == '__main__':
+    main()

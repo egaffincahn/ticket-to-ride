@@ -388,15 +388,38 @@ class Strategy:
         self.rng = rd.default_rng(seed=seed)
         self.init_inputs()
 
-    def init_weights(self):
+    def init_weights(self, parent1=None, parent2=None):
 
         logging.info('Building strategy')
-
         M0, M1, M2, M3 = utils.read_masks()
-        self.W0 = self.rande(M0)
-        self.W1 = [[self.rande(M1[rep][ind]) for ind in range(2)] for rep in range(self.reps)]
-        self.W2 = self.rande(M2)
-        self.W3 = self.rande(M3)
+
+        W0 = self.rande(M0)
+        W1 = [[self.rande(M1[rep][ind]) for ind in range(2)] for rep in range(self.reps)]
+        W2 = self.rande(M2)
+        W3 = self.rande(M3)
+
+        self.W0 = W0
+        self.W1 = W1
+        self.W2 = W2
+        self.W3 = W3
+
+        if parent1 is not None and parent2 is not None:
+
+            p = self.rng.beta(10, 10)
+
+            mutation_mask = self.rng.uniform(size=M0.shape) > .01
+            self.W0[mutation_mask] = p * parent1.W0[mutation_mask] + (1 - p) * parent2.W0[mutation_mask]
+
+            for rep in range(self.reps):
+                for ind in range(2):
+                    mutation_mask = self.rng.uniform(size=M1[rep][ind].shape) > .01
+                    self.W1[rep][ind][mutation_mask] = p * parent1.W1[rep][ind][mutation_mask] + (1 - p) * parent2.W1[rep][ind][mutation_mask]
+
+            mutation_mask = self.rng.uniform(size=M2.shape) > .01
+            self.W2[mutation_mask] = p * parent1.W2[mutation_mask] + (1 - p) * parent2.W2[mutation_mask]
+
+            mutation_mask = self.rng.uniform(size=M3.shape) > .01
+            self.W3[mutation_mask] = p * parent1.W3[mutation_mask] + (1 - p) * parent2.W3[mutation_mask]
 
     def init_inputs(self):
 
@@ -454,7 +477,8 @@ class Strategy:
         if input_type == 'all' or input_type == 'edges' or input_type == 'goal':
             goal_points = np.zeros(self.number_of_goals)
             subgraph = game_map.create_player_subgraph(turn)
-            for g in range(len(game_cards.goals['hands'][0])):
+            for g in range(game_cards.goals['hands'][turn].shape[0]):
+            # for g in range(len(game_cards.goals['hands'][turn]))#:game_cards.goals_init.shape[0]
                 ind = game_cards.goals['hands'][turn].index[g]
                 frm = game_cards.goals['hands'][turn].iloc[g, 0]
                 to = game_cards.goals['hands'][turn].iloc[g, 1]
@@ -490,10 +514,15 @@ class Strategy:
     def catbias(self, x):
         return np.concatenate((np.ones(1), x))
 
-    def rande(self, m):
-        w = np.zeros(m.shape)
-        w[m] = self.rng.uniform(size=np.sum(m)) - 0.5
-        w = w / np.tile(np.sum(m, axis=0), (m.shape[0], 1))
+    def rande(self, m, size=None, ismutation=False, mask=None):
+        if ismutation: # this does not normalize
+            sz = np.sum(m)
+            w = self.rng.uniform(size=np.sum(m)) - 0.5
+            w = w / sz
+        else:
+            w = np.zeros(m.shape)
+            w[m] = self.rng.uniform(size=np.sum(m)) - 0.5
+            w = w / np.tile(np.sum(m, axis=0), (m.shape[0], 1))
         return w
 
     def relu(self, x):

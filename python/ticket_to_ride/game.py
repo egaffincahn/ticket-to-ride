@@ -6,15 +6,17 @@ from networkx.algorithms import approximation as approx
 from ticket_to_ride.core import Map, Info, Cards, Strategy
 
 
-def play_game(players, plot=False):
+def play_game(players, game_strategies, plot=False):
 
     game_map = Map(players)
     game_info = Info(players)
     game_cards = Cards(players)
     game_cards.initialize_game()
-    game_strategies = [Strategy(players, turn, seed=turn) for turn in range(players)]
-    [game_strategies[turn].init_weights() for turn in range(players)]
-    [game_strategies[turn].update_inputs('all', game_info, game_cards, game_map) for turn in range(players)]
+    # game_strategies = [Strategy(players, turn, seed=turn) for turn in range(players)]
+    # [game_strategies[turn].init_weights() for turn in range(players)]
+    for turn in range(players):
+        game_strategies[turn].update_inputs('all', game_info, game_cards, game_map)
+        game_strategies[turn].turn = turn
 
     while all([game_info.pieces[trn] > 2 for trn in range(players)]):
         logging.info('round %d, player %d', game_info.nrounds, game_info.turn)
@@ -33,7 +35,8 @@ def play_game(players, plot=False):
 
     longest_road_winner = add_longest_road(game_map)
     game_info.points[longest_road_winner] += 10
-    logging.info('player %d wins longest road (+10)', longest_road_winner)
+    # logging.info('player %d wins longest road (+10)', longest_road_winner)
+    logging.info('...not adding longest road...')
 
     goal_points = add_goal_points(game_map, game_info, game_cards)
     game_info.points += np.array([goal_points[trn] for trn in range(players)])
@@ -236,5 +239,5 @@ def action_values_zero(action_values_init, game_map, game_cards, game_info, card
 
 def add_longest_road(game_map):
     # addlongestroad.m
-    return rd.randint(0, game_map.players-1)
+    return np.zeros(3, dtype=np.bool)#rd.randint(0, game_map.players-1)
 
