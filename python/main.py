@@ -1,28 +1,41 @@
-# raise exception
-# new logging levels
-# necessary:
-    # add longest road
-
 from datetime import datetime as dt
 import logging
-import numpy as np
-from genetic import run_all
+import pickle
+from ticket_to_ride.population import Population
 
-def main():
 
-    individuals = 99
-    generations = 500
+def main(new=True):
 
-    players = 3
-    plot = False
+    if new:
 
-    logging.basicConfig(filename='log.txt', filemode='w', format='%(message)s', level=logging.CRITICAL)
-    logging.critical('started at %s', str(dt.now()))
+        logging.basicConfig(filename='log.txt', filemode='w', format='%(message)s', level=logging.WARNING)
+        logging.critical('started at %s', str(dt.now()))
 
-    points = run_all(generations, individuals, players)
-    logging.critical('finished generations, points:\n%s', np.array_str(points))
+        population = Population(generations=3, individuals=3, deaths=1, number_of_cluster_reps=25)
+        # population = Population(generations=250, individuals=30, deaths=1, number_of_cluster_reps=25)
+
+    else:
+
+        logging.basicConfig(filename='log.txt', filemode='a', format='%(message)s', level=logging.WARNING)
+        with open('ticket_to_ride/data/data.obj', 'rb') as f:
+            population = pickle.load(f)
+
+    run_program(population)
+
     logging.critical('finished at %s', str(dt.now()))
     print('finished')
 
+
+def run_program(population):
+
+    while population.epoch < population.generations:
+        logging.warning('generation %d', population.epoch)
+        losers = population.run_generation()
+        population.kill_losers(losers)
+        if population.epoch < population.generations:
+            population.reproduce()
+        population.save()
+
+
 if __name__ == '__main__':
-    main()
+    main(new=True)
