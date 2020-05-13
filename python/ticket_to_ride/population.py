@@ -1,37 +1,52 @@
 import numpy as np
-from numpy import random as rd
+import logging
 import pickle
 import copy
-import logging
-from os.path import join
 from datetime import datetime as dt
 from core import TicketToRide
 from ticket_to_ride.strategy import Strategy
 from ticket_to_ride.game import Game
+import utils
 
 
 class Population(TicketToRide):
 
-    def __init__(self, generations=1, individuals=3, deaths=1, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.generations = generations
-        self.individuals = individuals
-        self.deaths = deaths
-        self.epoch = 0
 
-        self.alive_after_generation = np.int8(individuals * (self.players - deaths) / self.players)
-        if np.mod(individuals, self.players) > 0:
+        # defaults
+        self.generations = 1
+        self.individuals = 3
+        self.deaths = 1
+
+        # update defaults
+        for key in kwargs:
+            self.__setattr__(key, kwargs[key])
+
+        self.epoch = 0
+        self.alive_after_generation = np.int8(self.individuals * (self.players - self.deaths) / self.players)
+        if np.mod(self.individuals, self.players) > 0:
             raise self.Error('Number of individuals must be multiple of number of players')
 
         self.graveyard = []
-        self.cohort = np.array([Individual(epoch=self.epoch, **kwargs) for i in range(individuals)])
-        for i in range(individuals):
+        self.cohort = np.array([Individual(epoch=self.epoch, **kwargs) for _ in range(self.individuals)])
+        for i in range(self.individuals):
             self.cohort[i].strategy.init_weights()
+
+    def go(self, generations=None):
+        if generations is None:
+            generations = self.generations
+        while self.epoch < generations:
+            logging.warning('generation %d', self.epoch)
+            losers = self.run_generation()
+            self.extinction(losers)
+            if self.epoch < self.generations:
+                self.reproduce()
 
     def run_generation(self):
         players = self.players
         sets = np.int16(self.individuals / players)
-        order = rd.permutation(self.individuals).reshape(players, sets)
+        order = np.random.permutation(self.individuals).reshape(players, sets)
         losers = np.empty(sets, dtype=np.int16)
         logging.info('generation %d', self.epoch)
         for s in range(sets):
@@ -48,17 +63,17 @@ class Population(TicketToRide):
         parents = self.cohort
         individuals = len(parents)
         pairs = np.int16(individuals / 2)
-        order = rd.permutation(individuals).reshape(2, pairs)
+        order = np.random.permutation(individuals).reshape(2, pairs)
         children = [Individual(epoch=self.epoch, number_of_cluster_reps=self.number_of_cluster_reps) for _ in
                     range(pairs)]
         for p in range(pairs):
             children[p].strategy.init_weights(parents[order[0, p]].strategy, parents[order[1, p]].strategy)
         self.cohort = np.concatenate((parents, children))
 
-    def kill_losers(self, losers, save_memory=True):
+    def extinction(self, losers, save_memory=True):
         if save_memory:
-            for l in losers:
-                self.cohort[l].strategy = None
+            for lsr in losers:
+                self.cohort[lsr].strategy = None
         self.graveyard = np.concatenate((self.graveyard, self.cohort[losers]))
         self.cohort = np.delete(self.cohort, losers)
 
@@ -71,14 +86,13 @@ class Population(TicketToRide):
         values = [individual.__getattribute__(feature) for individual in cohort]
         return values
 
-    def save(self, path='', filename=None, slim=True):
-        if filename is None:
-            filename = self.data_location
+    def save(self, save_memory=True):
         population = copy.deepcopy(self)
-        if slim:
+        if save_memory:
             for individual in population.cohort:
                 individual.strategy.weights = None
         with open(join(path, filename), 'wb') as f:
+        with gzip.open(utils.output_file, 'wb') as f:
             pickle.dump(population, f)
 
 
