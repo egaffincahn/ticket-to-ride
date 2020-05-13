@@ -2,8 +2,9 @@ import numpy as np
 import networkx as nx
 import pickle
 from itertools import product
-from ticket_to_ride.board import Map, Cards
-from ticket_to_ride.strategy import Strategy
+from ticket import utils
+from ticket.board import Map, Cards
+from ticket.strategy import Strategy
 
 
 def write_adjacencies():
@@ -26,7 +27,7 @@ def write_adjacencies():
         for edge in blank_map.edges:
             adjacent_nodes_str[rep][edge] = get_adjacent_nodes_slow(blank_map, edge, reps=rep, dtype=str)
 
-    with open("ticket_to_ride/data/adjacent.obj", "wb") as f:
+    with open(utils.adjacency_file, 'wb') as f:
         pickle.dump(adjacent_edges_int, f)
         pickle.dump(adjacent_nodes_int, f)
         pickle.dump(adjacent_edges_tuple, f)
@@ -298,6 +299,6 @@ def write_masks(number_of_cluster_reps=50):
 
     M[rep + 1][1] = mask
 
-    with open("ticket_to_ride/data/masks.obj", "wb") as f:
+    with open(utils.masks_location, 'wb') as f:
         pickle.dump(M, f)
         pickle.dump(s.number_of_cluster_reps, f)

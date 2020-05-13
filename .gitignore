@@ -4,6 +4,14 @@ strategies.mat
 ._*
 map_debug.txt
 test.py
+timing.py
 python/__pycache__/
 python/venv/
 python/.idea/
+*.jpg
+*.xlsx
+*.txt
+*.pyc
+.R*
+data.obj
+*.drawio

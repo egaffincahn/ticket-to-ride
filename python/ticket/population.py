@@ -2,11 +2,12 @@ import numpy as np
 import logging
 import pickle
 import copy
+import gzip
 from datetime import datetime as dt
-from core import TicketToRide
-from ticket_to_ride.strategy import Strategy
-from ticket_to_ride.game import Game
-import utils
+from ticket.core import TicketToRide
+from ticket.strategy import Strategy
+from ticket.game import Game
+from ticket import utils
 
 
 class Population(TicketToRide):
@@ -91,7 +92,6 @@ class Population(TicketToRide):
         if save_memory:
             for individual in population.cohort:
                 individual.strategy.weights = None
-        with open(join(path, filename), 'wb') as f:
         with gzip.open(utils.output_file, 'wb') as f:
             pickle.dump(population, f)
 

@@ -1,27 +1,21 @@
 import numpy as np
-from numpy import random as rd
 import networkx as nx
 import logging
 from networkx.algorithms import approximation as approx
 from datetime import datetime as dt
-from core import TicketToRide
-from ticket_to_ride.board import Map
-from ticket_to_ride.data.read_files import read_masks
+from ticket.core import TicketToRide
+from ticket.board import Map
+from ticket import utils
 
 
 class Strategy(TicketToRide):
 
     def __init__(self, seed=dt.now().microsecond, **kwargs):
         super().__init__(**kwargs)
-        self.rng = rd.default_rng(seed=seed)
+        self.rng = np.random.default_rng(seed=seed)
         self.inputs, self.input_indices = self.init_inputs()
         blank_map = Map(**kwargs)
         self.reps = nx.diameter(blank_map.map) + 1
-
-        # if 'players' in kwargs:
-        #     self.players = kwargs['players']
-        # if 'number_of_cluster_reps' in kwargs:
-        #     self.number_of_cluster_reps = kwargs['number_of_cluster_reps']
 
     def set_game_turn(self, game_turn):
         self.player_logical_index = np.arange(self.players) == game_turn  # changes every game
@@ -29,7 +23,7 @@ class Strategy(TicketToRide):
     def init_weights(self, parent1=None, parent2=None):
 
         logging.debug('Building strategy')
-        mask, number_of_cluster_reps_tmp = read_masks()
+        mask, number_of_cluster_reps_tmp = utils.read_masks()
         if number_of_cluster_reps_tmp != self.number_of_cluster_reps:
             raise self.Error('Incorrect number_of_cluster_reps, re-run write_masks()')
 
@@ -142,7 +136,8 @@ class Strategy(TicketToRide):
         elif ntype == 'distance':
             return (x - 3.5) / 3.5
         else:
-            raise self.Error('invalid normalization type ' + ntype)
+            raise self.Error('invalid normalization type {}'.format(ntype))
+
     # end class Strategy
 
 

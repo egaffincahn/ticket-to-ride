@@ -1,11 +1,10 @@
 import pandas as pd
-import numpy.random as rd
 import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 import logging
-from core import TicketToRide
-from ticket_to_ride.data.read_files import read_adjacencies
+from ticket.core import TicketToRide
+from ticket import utils
 
 
 class Cards(TicketToRide):
@@ -33,7 +32,7 @@ class Cards(TicketToRide):
 
     def shuffle_deck(self):
         logging.debug('shuffling deck')
-        rd.shuffle(self.resources['deck'])
+        np.random.shuffle(self.resources['deck'])
 
     def shuffle_goals(self):
         logging.debug('shuffling goal cards')
@@ -118,13 +117,11 @@ def reorder_edge(edge):
 
 
 class Map(TicketToRide):
-    _pandas_map = pd.read_csv('ticket_to_ride/data/map_multitrack2.txt')
+    _pandas_map = pd.read_csv(utils.map_file)
     _pandas_map['turn'] = -1
-    _blank_map = nx.from_pandas_edgelist(_pandas_map, 'from', 'to',
-                                        edge_attr=['distance', 'color', 'parallel', 'turn'],
-                                        create_using=nx.MultiGraph())
-    _coordinates = pd.read_csv('ticket_to_ride/data/coordinates.txt', index_col=0).T.to_dict('list')
-    _adjacent_edges_int, _adjacent_nodes_int, _adjacent_edges_tuple, _adjacent_nodes_str = read_adjacencies()
+    _blank_map = nx.from_pandas_edgelist(_pandas_map, 'from', 'to', edge_attr=['distance', 'color', 'parallel', 'turn'], create_using=nx.MultiGraph())
+    _coordinates = pd.read_csv(utils.coordinates_file, index_col=0).T.to_dict('list')
+    _adjacent_edges_int, _adjacent_nodes_int, _adjacent_edges_tuple, _adjacent_nodes_str = utils.read_adjacencies()
 
     # adjacent edges and nodes
     _edge_tuple_to_int = dict()
@@ -216,7 +213,7 @@ class Map(TicketToRide):
             nodes = np.array([self.get_node_name(n) for n in nodes])
         return nodes
 
-    def get_adjacent_edges(self, node, reps=0, **kwargs): # FIX DTYPE OUT
+    def get_adjacent_edges(self, node, reps=0, **kwargs):  # FIX DTYPE OUT
         dtype_in = type(node)
         if 'dtype' in kwargs:
             dtype_out = kwargs['dtype']
@@ -267,7 +264,7 @@ class Map(TicketToRide):
             elif 'nodes' in kwargs:
                 return list(np.unique(values))
         else:
-            raise self.Error('Invalid values type'+type(values))
+            raise self.Error('Invalid values type {}'.format(type(values)))
 
     def get_edge_index(self, edge_name):
         return self._edge_tuple_to_int[reorder_edge(edge_name)]

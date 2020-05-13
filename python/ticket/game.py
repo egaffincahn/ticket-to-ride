@@ -2,9 +2,9 @@ import numpy as np
 import logging
 from itertools import chain
 from networkx.algorithms import approximation as approx
-from core import TicketToRide
-from ticket_to_ride.strategy import Strategy
-from ticket_to_ride.board import Map, Cards
+from ticket.core import TicketToRide
+from ticket.strategy import Strategy
+from ticket.board import Map, Cards
 
 
 class Game(TicketToRide):
@@ -236,7 +236,7 @@ class Game(TicketToRide):
         possible_indices.extend([ind for ind, val in enumerate(self.cards.resources['hands'][turn]) if val == 0])
         indices = possible_indices[:edge_length]
         if len(indices) < edge_length:
-            raise Error('Cards used is fewer than edge length')
+            raise self.Error('Cards used is fewer than edge length')
         return indices
 
         # end choose_resources
