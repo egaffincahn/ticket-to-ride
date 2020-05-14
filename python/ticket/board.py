@@ -193,7 +193,7 @@ class Map(TicketToRide):
             feature_values = feature_values.ravel()
         return feature_values
 
-    def get_adjacent_nodes(self, edge, reps=0, **kwargs):  # FIX DTYPE_OUT
+    def get_adjacent_nodes(self, edge, reps=0, **kwargs):
         dtype_in = type(edge)
         if dtype_in == tuple or dtype_in == list:
             dtype_in = str
@@ -201,30 +201,34 @@ class Map(TicketToRide):
             dtype_out = kwargs['dtype']
         else:
             dtype_out = dtype_in
-        if dtype_in == int or dtype_in == np.int64:
+        if dtype_in == int or dtype_in == np.integer:
             nodes = self._adjacent_nodes_int[reps][edge]
+            if dtype_out == str:
+                nodes = np.array([self.get_node_name(n) for n in nodes])
         elif dtype_in == tuple:
             nodes = self._adjacent_nodes_str[reps][edge]
+            if dtype_out == int:
+                nodes = np.array([self.get_node_index(n) for n in nodes])
         else:
-            raise self.Error('Invalid type(edge)' + dtype_in)
-        if dtype_out == int and isinstance(nodes, str):
-            nodes = self.get_node_index(nodes)
-        elif dtype_out == str and isinstance(nodes[0], np.int64):
-            nodes = np.array([self.get_node_name(n) for n in nodes])
+            raise self.Error('Invalid type(edge) {}'.format(dtype_in))
         return nodes
 
-    def get_adjacent_edges(self, node, reps=0, **kwargs):  # FIX DTYPE OUT
+    def get_adjacent_edges(self, node, reps=0, **kwargs):
         dtype_in = type(node)
         if 'dtype' in kwargs:
             dtype_out = kwargs['dtype']
         else:
             dtype_out = dtype_in
-        if dtype_in == int or dtype_in == np.int64:
+        if dtype_in == int or dtype_in == np.integer:
             edges = self._adjacent_edges_int[reps][node]
+            if dtype_out == tuple:
+                edges = [self.get_edge_name(e) for e in edges]
         elif dtype_in == str:
             edges = self._adjacent_edges_tuple[reps][node]
+            if dtype_out == int:
+                edges = [self.get_edge_index(e) for e in edges]
         else:
-            raise self.Error('Invalid type(edge)' + dtype_in)
+            raise self.Error('Invalid type(edge) {}'.format(dtype_in))
         return edges
 
     def create_player_subgraph(self, turn):
