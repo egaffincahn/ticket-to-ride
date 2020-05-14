@@ -7,9 +7,7 @@ test.py
 timing.py
 python/__pycache__/
 python/venv/
-python/.idea/
-*.jpg
-*.xlsx
+.idea/
 *.pyc
 .R*
 data.obj
