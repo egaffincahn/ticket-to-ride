@@ -10,7 +10,6 @@ python/venv/
 python/.idea/
 *.jpg
 *.xlsx
-*.txt
 *.pyc
 .R*
 data.obj
