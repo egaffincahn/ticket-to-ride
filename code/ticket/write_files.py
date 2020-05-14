@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import pickle
+import bz2
 from itertools import product
 from ticket import utils
 from ticket.board import Map, Cards
@@ -15,26 +16,26 @@ def write_adjacencies():
     adjacent_nodes_int = [[[] for _ in range(blank_map.NUM_EDGES)] for _ in range(reps)]
     for rep in range(reps):
         for n in range(blank_map.NUM_NODES):
-            adjacent_edges_int[rep][n] = get_adjacent_edges_slow(blank_map, n, reps=rep, dtype=int)
+            adjacent_edges_int[rep][n] = _get_adjacent_edges_slow(blank_map, n, reps=rep, dtype=int)
         for e in range(blank_map.NUM_EDGES):
-            adjacent_nodes_int[rep][e] = get_adjacent_nodes_slow(blank_map, e, reps=rep, dtype=int)
+            adjacent_nodes_int[rep][e] = _get_adjacent_nodes_slow(blank_map, e, reps=rep, dtype=int)
 
     adjacent_edges_tuple = [dict() for _ in range(reps)]
     adjacent_nodes_str = [dict() for _ in range(reps)]
     for rep in range(reps):
         for node in blank_map.nodes:
-            adjacent_edges_tuple[rep][node] = get_adjacent_edges_slow(blank_map, node, reps=rep, dtype=tuple)
+            adjacent_edges_tuple[rep][node] = _get_adjacent_edges_slow(blank_map, node, reps=rep, dtype=tuple)
         for edge in blank_map.edges:
-            adjacent_nodes_str[rep][edge] = get_adjacent_nodes_slow(blank_map, edge, reps=rep, dtype=str)
+            adjacent_nodes_str[rep][edge] = _get_adjacent_nodes_slow(blank_map, edge, reps=rep, dtype=str)
 
-    with open(utils.adjacency_file, 'wb') as f:
+    with bz2.open(utils.adjacency_file, 'wb') as f:
         pickle.dump(adjacent_edges_int, f)
         pickle.dump(adjacent_nodes_int, f)
         pickle.dump(adjacent_edges_tuple, f)
         pickle.dump(adjacent_nodes_str, f)
 
 
-def get_adjacent_nodes_slow(edge, reps=0, **kwargs):
+def _get_adjacent_nodes_slow(edge, reps=0, **kwargs):
     blank_map = Map()
     dtype_in = type(edge)
     if dtype_in == tuple or dtype_in == list:
@@ -46,7 +47,7 @@ def get_adjacent_nodes_slow(edge, reps=0, **kwargs):
     if dtype_in == str:
         edge = blank_map.get_edge_index(edge)
 
-    _, shortest_path_length_int = get_shortest_paths()
+    _, shortest_path_length_int = _get_shortest_paths()
 
     nodes0 = [blank_map.get_node_index(n) for n in blank_map.get_edge_name(edge)[:2]]
     nodes = []
@@ -62,7 +63,7 @@ def get_adjacent_nodes_slow(edge, reps=0, **kwargs):
     return nodes
 
 
-def get_adjacent_edges_slow(blank_map, node, reps=0, **kwargs):
+def _get_adjacent_edges_slow(blank_map, node, reps=0, **kwargs):
     dtype_in = type(node)
     if 'dtype' in kwargs:
         dtype_out = kwargs['dtype']
@@ -71,7 +72,7 @@ def get_adjacent_edges_slow(blank_map, node, reps=0, **kwargs):
     if dtype_in != str:
         node = blank_map.get_node_name(node)
 
-    shortest_path_length, _ = get_shortest_paths()
+    shortest_path_length, _ = _get_shortest_paths()
 
     edges = []
     for e in blank_map.edges:
@@ -85,7 +86,7 @@ def get_adjacent_edges_slow(blank_map, node, reps=0, **kwargs):
     return edges
 
 
-def get_shortest_paths():
+def _get_shortest_paths():
     blank_map = Map()
     spl = dict(nx.shortest_path_length(blank_map.map))
     spl_int = {}
@@ -98,7 +99,7 @@ def get_shortest_paths():
     return spl, spl_int
 
 
-def write_masks(number_of_cluster_reps=50):
+def write_masks(number_of_cluster_reps=25):
     def size_estimate(x):
         return .03 * x + .09 * x ** 2
     print("Predicted size of masks.obj:", size_estimate(number_of_cluster_reps), "mb")
@@ -294,6 +295,6 @@ def write_masks(number_of_cluster_reps=50):
 
     M[rep + 1][1] = mask
 
-    with open(utils.masks_file, 'wb') as f:
+    with bz2.open(utils.masks_file, 'wb') as f:
         pickle.dump(M, f)
         pickle.dump(s.number_of_cluster_reps, f)

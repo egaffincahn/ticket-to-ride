@@ -1,4 +1,5 @@
 import pickle
+import bz2
 import os
 from os.path import join
 
@@ -21,7 +22,7 @@ else:
 
 
 def read_adjacencies():
-    with open(adjacency_file, 'rb') as f:
+    with bz2.open(adjacency_file, 'rb') as f:
         adjacent_edges_int = pickle.load(f)
         adjacent_nodes_int = pickle.load(f)
         adjacent_edges_tuple = pickle.load(f)
@@ -30,7 +31,7 @@ def read_adjacencies():
 
 
 def read_masks():
-    with open(masks_file, 'rb') as f:
+    with bz2.open(masks_file, 'rb') as f:
         mask = pickle.load(f)
         number_of_cluster_reps = pickle.load(f)
     return mask, number_of_cluster_reps
