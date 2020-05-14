@@ -47,14 +47,8 @@ class Game(TicketToRide):
 
         logging.debug('points for tracks: %s', self.points.__str__())
 
-        longest_road_winner = self.add_longest_road()
-        self.points[longest_road_winner] += 10
-        # logging.debug('player %d wins longest road (+10)', longest_road_winner)
-        logging.debug('...not adding longest road...')
-
-        goal_points = self.add_goal_points()
-        self.points += np.array([goal_points[trn] for trn in range(players)])
-        logging.debug('goal points: %s', goal_points.__str__())
+        self.add_longest_road()
+        self.add_goal_points()
 
         winner = np.argmax(self.points)
         # winning_points = self.points[winner]
@@ -88,7 +82,8 @@ class Game(TicketToRide):
                 logging.info('cards in hand: %d', len(self.cards.resources['hands'][turn]))
                 logging.info('colors of hand cards: %s', self.cards.color_count('hands', turn=turn).__str__())
                 logging.info('pieces remaining: %d', self.pieces[turn])
-                edges_short_enough = self.map.subset_edges(feature='distance', value=self.pieces[turn], op=np.less_equal)
+                edges_short_enough = self.map.subset_edges(
+                    feature='distance', value=self.pieces[turn], op=np.less_equal)
                 logging.info('tracks short enough for pieces remaining: ')
                 logging.info(list(edges_short_enough))
                 logging.info('...and their taken status:')
@@ -185,7 +180,7 @@ class Game(TicketToRide):
                     action_values['faceup'][ind] = action_values_init['faceup'][ind]
             return action_values
 
-        if len(self.cards.resources['faceup']) >= 5 and ( # SHOULD JUST BE == ?
+        if len(self.cards.resources['faceup']) >= 5 and (  # SHOULD JUST BE == ?
                 cards_taken + len(self.cards.resources['deck']) + len(self.cards.resources['discards']) >= 2):
             action_values['deck'] = action_values_init['deck']
             action_values['faceup'] = action_values_init['faceup']
@@ -226,11 +221,11 @@ class Game(TicketToRide):
         hand_colors = self.cards.color_count('hands', turn=turn)
         if edge_color == 0:
             possible_colors = []
-            nrainbow = 0
+            num_rainbow = 0
             while len(possible_colors) == 0:
                 possible_colors = [c for c in np.arange(1, self.NUM_COLORS, 1) if
-                                   hand_colors[c] + nrainbow >= edge_length]
-                nrainbow += 1
+                                   hand_colors[c] + num_rainbow >= edge_length]
+                num_rainbow += 1
             edge_color = np.random.choice(possible_colors)
         possible_indices = [ind for ind, val in enumerate(self.cards.resources['hands'][turn]) if val == edge_color]
         possible_indices.extend([ind for ind, val in enumerate(self.cards.resources['hands'][turn]) if val == 0])
@@ -255,15 +250,17 @@ class Game(TicketToRide):
                 else:
                     logging.debug('goal for player %d: from %s to %s, -%d', turn, row[0], row[1], row[2])
                     points[turn] -= row[2]
-        return points
+        logging.debug('goal points: %s', points.__str__())
+        self.points += points
 
     def add_longest_road(self):
-        # addlongestroad.m
-        return np.zeros(3, dtype=np.bool)  # rd.randint(0, self.map.players-1)
+        # logging.debug('player %d wins longest road (+10)', longest_road_winner)
+        logging.debug('...not adding longest road...')
+        winner = np.zeros(3, dtype=np.bool)
+        self.points[winner] += 10
 
     def next_turn(self):
         self.turn += 1
         if self.turn == self.players:
             self.turn = 0
             self.round += 1
-

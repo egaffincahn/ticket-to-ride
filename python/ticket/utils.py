@@ -1,10 +1,6 @@
-# import numpy as np
-# import networkx as nx
 import pickle
+import os
 from os.path import join
-# from itertools import product
-# from ticket.board import Map, Cards
-# from ticket.strategy import Strategy
 
 
 data_location = join('ticket', 'data')
@@ -17,7 +13,11 @@ adjacency_file = join(data_location, 'adjacent.obj')
 masks_file = join(data_location, 'masks.obj')
 
 log_file = join(data_location, 'log.txt')
-output_file = join(data_location, 'data.obj')
+_external = join(os.sep, 'Volumes', 'EGs WD')
+if os.path.exists(_external):
+    output_file = join(_external, 'data.obj')
+else:
+    output_file = join(data_location, 'data.obj')
 
 
 def read_adjacencies():
@@ -31,12 +31,11 @@ def read_adjacencies():
 
 def read_masks():
     with open(masks_file, 'rb') as f:
-        M = pickle.load(f)
+        mask = pickle.load(f)
         number_of_cluster_reps = pickle.load(f)
-    return M, number_of_cluster_reps
+    return mask, number_of_cluster_reps
 
 
 def extract_cluster_reps():
     _, number_of_cluster_reps = read_masks()
     return number_of_cluster_reps
-

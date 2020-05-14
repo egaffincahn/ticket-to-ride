@@ -4,7 +4,7 @@ import pickle
 from itertools import product
 from ticket import utils
 from ticket.board import Map, Cards
-from ticket.strategy import Strategy
+from ticket.strategy import Strategy, next_ind
 
 
 def write_adjacencies():
@@ -95,14 +95,13 @@ def get_shortest_paths():
             node_dict[blank_map.get_node_index(n_)] = length
         spl_int[blank_map.get_node_index(n)] = node_dict
     spl_int = spl_int
-    shortest_path = dict(nx.shortest_path(blank_map.map))
     return spl, spl_int
 
 
 def write_masks(number_of_cluster_reps=50):
-
-    fun = lambda x: .03 * x + .09 * x ** 2
-    print("Predicted size of masks.obj:", fun(number_of_cluster_reps), "mb")
+    def size_estimate(x):
+        return .03 * x + .09 * x ** 2
+    print("Predicted size of masks.obj:", size_estimate(number_of_cluster_reps), "mb")
 
     s = Strategy()
     s.blank_cards = Cards()
@@ -111,7 +110,7 @@ def write_masks(number_of_cluster_reps=50):
     if number_of_cluster_reps is not None:
         s.number_of_cluster_reps = number_of_cluster_reps
 
-    next_ind = lambda x: np.max(np.concatenate((list(x.values()))), keepdims=True) + 1
+    # next_ind = lambda x: np.max(np.concatenate((list(x.values()))), keepdims=True) + 1
 
     layer_indices = dict()
     layer_indices['nodes'] = np.arange(s.NUM_NODES * s.number_of_cluster_reps)
@@ -123,7 +122,7 @@ def write_masks(number_of_cluster_reps=50):
     ind2repind = lambda ind: ind * s.number_of_cluster_reps + np.arange(s.number_of_cluster_reps, dtype=np.int32)
     expand = lambda row, col: tuple(np.array(tuple(product(row, col))).T.tolist())
 
-    M = [[[] for _ in range(2)] for _ in range(s.reps+1)]
+    M = [[[] for _ in range(2)] for _ in range(s.reps + 1)]
 
     for rep in range(s.reps):
 
@@ -141,10 +140,10 @@ def write_masks(number_of_cluster_reps=50):
         if rep == 0:
             row = np.concatenate((  # input indices already have bias included
                 s.input_indices['turn_pieces'],
-                s.input_indices['oppnt_pieces'],
+                s.input_indices['opponent_pieces'],
                 s.input_indices['turn_points'],
-                s.input_indices['oppnt_points'],
-                s.input_indices['oppnt_hand_lengths']
+                s.input_indices['opponent_points'],
+                s.input_indices['opponent_hand_lengths']
             ))
             mask[row,] = True  # inputs that are fully connected
 
@@ -245,7 +244,6 @@ def write_masks(number_of_cluster_reps=50):
     mask[0,] = True
 
     for e in range(s.NUM_EDGES):
-
         row = layer_indices['edges'][ind2repind(e)] + 1  # add 1 bc layer indices does not include bias
         col = layer_indices['edges'][ind2repind(e)]
         mask[expand(row, col)] = True
@@ -265,24 +263,22 @@ def write_masks(number_of_cluster_reps=50):
 
     # from edges
     for e in range(s.NUM_EDGES):
-
         # onto edges
         row = layer_indices['edges'][ind2repind(e)] + 1
         col = e
-        mask[row,col] = True
+        mask[row, col] = True
 
         # onto goals
         col = s.NUM_EDGES
-        mask[row,col] = True
+        mask[row, col] = True
 
         # onto colors (skip deck)
         ind = s.blank_map.extract_feature(e, 'color')
         col = s.NUM_EDGES + 2
-        mask[row,col] = True
+        mask[row, col] = True
 
     # from colors
     for c in range(s.NUM_COLORS):
-
         # onto edges
         row = ind2repind(c) + s.NUM_EDGES * s.number_of_cluster_reps + 1
         col = s.blank_map.subset_edges('color', c, dtype=int)
@@ -290,15 +286,14 @@ def write_masks(number_of_cluster_reps=50):
 
         # onto deck (skip goals)
         col = s.NUM_EDGES + 1
-        mask[row,col] = True
+        mask[row, col] = True
 
         # onto faceups
         col = np.arange(5) + s.NUM_EDGES + 2
-        mask[expand(row,col)] = True
-
+        mask[expand(row, col)] = True
 
     M[rep + 1][1] = mask
 
-    with open(utils.masks_location, 'wb') as f:
+    with open(utils.masks_file, 'wb') as f:
         pickle.dump(M, f)
         pickle.dump(s.number_of_cluster_reps, f)

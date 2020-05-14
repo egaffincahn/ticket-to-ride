@@ -13,8 +13,8 @@ def main(new=True):
         logging.basicConfig(filename=utils.log_file, filemode='w', format='%(message)s', level=logging.WARNING)
         logging.critical('started at %s', str(dt.now()))
 
-        population = Population(generations=5, individuals=3)
-        # population = Population(generations=250, individuals=30)
+        population = Population(generations=1, individuals=3)
+        # population = Population(generations=1, individuals=30)
 
     else:
 
@@ -24,11 +24,11 @@ def main(new=True):
             population = pickle.load(f)
 
     population.go()
-    population.save(save_memory=False)
+    population.save(save_memory=True)
 
     logging.critical('finished at %s', str(dt.now()))
     print('finished')
 
 
 if __name__ == '__main__':
-    main(new=False)
+    main(new=True)

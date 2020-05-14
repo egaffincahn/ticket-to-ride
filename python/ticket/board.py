@@ -11,18 +11,14 @@ class Cards(TicketToRide):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.resources = {
-            'deck': [color for color in range(self.NUM_COLORS) for _ in range(12)],  # 9 colors, 12 of each
-            'faceup': [[] for _ in range(5)],
-            'discards': [],
-            'hands': [[] for _ in range(self.players)]
-        }
+        self.resources = dict(
+            deck=[color for color in range(self.NUM_COLORS) for _ in range(12)],  # 9 colors, 12 of each
+            faceup=[[] for _ in range(5)],
+            discards=[],
+            hands=[[] for _ in range(self.players)]
+        )
         self.resources['deck'].extend([0, 0])  # 14 rainbows vs 12 of every other
-        self.goals = {
-            'deck': self.goals_init,
-            'hands': [pd.DataFrame({'from': [], 'to': [], 'value': []}, dtype=int) for _ in
-                      range(self.players)],
-        }
+        self.goals = dict(deck=self.goals_init, hands=[pd.DataFrame(data={'from': [], 'to': [], 'value': []}) for _ in range(self.players)])
 
     def initialize_game(self):
         self.shuffle_deck()
@@ -89,7 +85,7 @@ class Cards(TicketToRide):
         self.cards_check()
 
     def pick_goal(self, turn):
-        self.goals['hands'][turn] = self.goals['hands'][turn].append(self.goals['deck'].iloc[0,])
+        self.goals['hands'][turn] = self.goals['hands'][turn].append(self.goals['deck'].iloc[0, ])
         self.goals['deck'] = self.goals['deck'][1:]
         logging.debug('player %d picks goal from %s to %s for %d points, %d goals in hand, %d in deck', turn,
                       self.goals['hands'][turn].iloc[-1, 0], self.goals['hands'][turn].iloc[-1, 1],
@@ -119,7 +115,8 @@ def reorder_edge(edge):
 class Map(TicketToRide):
     _pandas_map = pd.read_csv(utils.map_file)
     _pandas_map['turn'] = -1
-    _blank_map = nx.from_pandas_edgelist(_pandas_map, 'from', 'to', edge_attr=['distance', 'color', 'parallel', 'turn'], create_using=nx.MultiGraph())
+    _blank_map = nx.from_pandas_edgelist(_pandas_map, 'from', 'to', edge_attr=['distance', 'color', 'parallel', 'turn'],
+                                         create_using=nx.MultiGraph())
     _coordinates = pd.read_csv(utils.coordinates_file, index_col=0).T.to_dict('list')
     _adjacent_edges_int, _adjacent_nodes_int, _adjacent_edges_tuple, _adjacent_nodes_str = utils.read_adjacencies()
 
@@ -179,15 +176,15 @@ class Map(TicketToRide):
         feature_values = self.edge_features_int[feature][edges]
         if turn is not None:
             feature_values_tmp = np.empty(feature_values.shape, dtype=np.int8)
-            oppnt = -1
+            opponent = -1
             for f in np.arange(-1, self.players, 1):
                 if f == -1:
                     feature_values_tmp[feature_values == f] = 0
                 elif f == turn:
                     feature_values_tmp[feature_values == f] = 1
                 else:
-                    feature_values_tmp[feature_values == f] = oppnt
-                    oppnt -= 1
+                    feature_values_tmp[feature_values == f] = opponent
+                    opponent -= 1
             feature_values = feature_values_tmp
         if as_col:
             feature_values = feature_values.ravel()
