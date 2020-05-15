@@ -51,10 +51,6 @@ class Game(TicketToRide):
         self.add_goal_points()
 
         winner = np.argmax(self.points)
-        # winning_points = self.points[winner]
-
-        # for turn in range(players):
-        #     self.points[turn] = self.points[turn]
 
         logging.debug('pieces at end: %s', self.pieces.__str__())
         logging.debug('points at end: %s', self.points.__str__())

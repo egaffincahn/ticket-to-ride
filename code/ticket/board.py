@@ -257,7 +257,7 @@ class Map(TicketToRide):
 
         if len(values) == 0:
             return []
-        elif isinstance(values[0], int) or isinstance(values[0], np.int64):
+        elif isinstance(values[0], int) or isinstance(values[0], np.integer):
             return list(np.unique(values))
         elif isinstance(values[0], str) or isinstance(values[0], tuple) or isinstance(values[0], list):
             if 'edges' in kwargs:

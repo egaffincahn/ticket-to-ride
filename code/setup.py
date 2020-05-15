@@ -30,5 +30,5 @@ def main(new=True):
     print('finished')
 
 
-if __name__ == '__setup__':
+if __name__ == '__main__':
     main(new=True)

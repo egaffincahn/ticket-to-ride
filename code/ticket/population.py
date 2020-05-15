@@ -56,8 +56,7 @@ class Population(TicketToRide):
             winners[s] = order[np.argmax(game.points), s]
             losers[s] = order[np.argmin(game.points), s]
             [self.cohort[order[turn, s]].add_experience(game, turn) for turn in range(players)]
-            logging.warning('game points: %s, ages: %s', game.points.__str__(),
-                            [self.cohort[order[turn, s]].age for turn in range(players)].__str__())
+            logging.warning('game points: {}, id: {}, parent: {}, ages: {}'.format(game.points, [self.cohort[order[turn, s]].id for turn in range(players)], [self.cohort[order[turn, s]].parent for turn in range(players)], [self.cohort[order[turn, s]].age for turn in range(players)]))
         self.epoch += 1
         rest = order[np.logical_not(np.isin(order, np.concatenate((winners, losers))))]  # neither winners nor losers
         return self.cohort[winners], self.cohort[losers], self.cohort[rest]

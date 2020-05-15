@@ -1,3 +1,6 @@
--currently can draw (and keep) exactly 2 goal cards, instead of 3 and being able to choose
--better support for multi-track and multi-color tracks
+**add longest road
+*currently can draw (and keep) exactly 2 goal cards, instead of 3 and being able to choose
 -make plotting prettier?
+-improve logging
+-don't want to load map stuff every time? how much time does it use
+-mask for random weight initialization?

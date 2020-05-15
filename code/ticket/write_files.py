@@ -111,8 +111,6 @@ def write_masks(number_of_cluster_reps=25):
     if number_of_cluster_reps is not None:
         s.number_of_cluster_reps = number_of_cluster_reps
 
-    # next_ind = lambda x: np.max(np.concatenate((list(x.values()))), keepdims=True) + 1
-
     layer_indices = dict()
     layer_indices['nodes'] = np.arange(s.NUM_NODES * s.number_of_cluster_reps)
     layer_indices['colors'] = next_ind(layer_indices) + np.arange(s.NUM_COLORS * s.number_of_cluster_reps)
