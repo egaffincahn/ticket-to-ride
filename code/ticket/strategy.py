@@ -27,16 +27,13 @@ class Strategy(TicketToRide):
     def init_weights(self, parent1=None, parent2=None):
 
         logging.debug('Building strategy')
-        mask, number_of_cluster_reps_tmp = utils.read_masks()
-        if number_of_cluster_reps_tmp != self.number_of_cluster_reps:
-            raise self.Error('Incorrect number_of_cluster_reps, re-run write_masks()')
-
-        self.weights = [[_rand_init(mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
         if parent1 is not None and parent2 is not None:
 
             p = self.beta(self.inheritance_beta_params)
+        self.weights = [[_rand_init(self.mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
+        if parent is not None:
             for rep in range(self.reps + 1):
                 for ind in range(2):
                     mutation_mask = self.rng.uniform(size=mask[rep][ind].shape) > self.beta(self.mutation_beta_params)
