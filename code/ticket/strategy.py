@@ -9,8 +9,6 @@ from ticket import utils
 
 
 class Strategy(TicketToRide):
-    inheritance_beta_params = [10, 10]
-    mutation_beta_params = [3, 200]
 
     def __init__(self, seed=dt.now().microsecond, **kwargs):
         super().__init__(**kwargs)
@@ -24,20 +22,16 @@ class Strategy(TicketToRide):
     def set_game_turn(self, game_turn):
         self.player_logical_index = np.arange(self.players) == game_turn  # changes every game
 
-    def init_weights(self, parent1=None, parent2=None):
+    def init_weights(self, parent=None):
 
         logging.debug('Building strategy')
-
-        if parent1 is not None and parent2 is not None:
-
-            p = self.beta(self.inheritance_beta_params)
         self.weights = [[_rand_init(self.mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
         if parent is not None:
             for rep in range(self.reps + 1):
                 for ind in range(2):
-                    mutation_mask = self.rng.uniform(size=mask[rep][ind].shape) > self.beta(self.mutation_beta_params)
-                    self.weights[rep][ind][mutation_mask] = _lincomb(parent1.weights[rep][ind][mutation_mask], parent2.weights[rep][ind][mutation_mask], p)
+                    mutation_mask = self.rng.uniform(size=self.mask[rep][ind].shape) > self.rng.beta(self.mutation_beta_params[0], self.mutation_beta_params[1])
+                    self.weights[rep][ind][mutation_mask] = parent.weights[rep][ind][mutation_mask]
 
     def init_inputs(self):
 
@@ -138,10 +132,6 @@ class Strategy(TicketToRide):
             return (x - 3.5) / 3.5
         else:
             raise self.Error('invalid normalization type {}'.format(ntype))
-
-    def beta(self, theta):
-        a, b = theta
-        return self.rng.beta(a, b)
 
     # end class Strategy
 

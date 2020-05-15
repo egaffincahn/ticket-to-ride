@@ -24,59 +24,64 @@ class Population(TicketToRide):
         for key in kwargs:
             self.__setattr__(key, kwargs[key])
 
+        self.total_individuals = 0
         self.epoch = 0
         self.alive_after_generation = np.int8(self.individuals * (self.players - self.deaths) / self.players)
         if np.mod(self.individuals, self.players) > 0:
             raise self.Error('Number of individuals must be multiple of number of players')
 
         self.graveyard = []
-        self.cohort = np.array([Individual(epoch=self.epoch, **kwargs) for _ in range(self.individuals)])
-        for i in range(self.individuals):
-            self.cohort[i].strategy.init_weights()
+        self.cohort = np.array([self.create_individual(**kwargs) for _ in range(self.individuals)])
 
     def go(self, generations=None):
         if generations is None:
             generations = self.generations
         while self.epoch < generations:
             logging.warning('generation %d', self.epoch)
-            losers = self.run_generation()
-            self.extinction(losers)
+            winners, losers, rest = self.run_generation()
+            self.extinction(losers)  # only losers die
             if self.epoch < self.generations:
-                self.reproduce()
+                self.reproduce(winners, rest)  # only winners reproduce
 
     def run_generation(self):
         players = self.players
         sets = np.int16(self.individuals / players)
         order = np.random.permutation(self.individuals).reshape(players, sets)
+        winners = np.empty(sets, dtype=np.int16)
         losers = np.empty(sets, dtype=np.int16)
         logging.info('generation %d', self.epoch)
         for s in range(sets):
             game = Game([self.cohort[order[turn, s]].strategy for turn in range(players)])
             game.play_game()
+            winners[s] = order[np.argmax(game.points), s]
             losers[s] = order[np.argmin(game.points), s]
             [self.cohort[order[turn, s]].add_experience(game, turn) for turn in range(players)]
             logging.warning('game points: %s, ages: %s', game.points.__str__(),
                             [self.cohort[order[turn, s]].age for turn in range(players)].__str__())
         self.epoch += 1
-        return losers
+        rest = order[np.logical_not(np.isin(order, np.concatenate((winners, losers))))]  # neither winners nor losers
+        return self.cohort[winners], self.cohort[losers], self.cohort[rest]
 
-    def reproduce(self):
-        parents = self.cohort
-        individuals = len(parents)
-        pairs = np.int16(individuals / 2)
-        order = np.random.permutation(individuals).reshape(2, pairs)
-        children = [Individual(epoch=self.epoch, number_of_cluster_reps=self.number_of_cluster_reps) for _ in
-                    range(pairs)]
-        for p in range(pairs):
-            children[p].strategy.init_weights(parents[order[0, p]].strategy, parents[order[1, p]].strategy)
-        self.cohort = np.concatenate((parents, children))
+    def create_individual(self, parent=None, **kwargs):
+        individual = Individual(id=self.total_individuals, epoch=self.epoch, parent=parent, **kwargs)
+        if parent is None:
+            individual.strategy.init_weights()
+        else:
+            individual.strategy.init_weights(parent.strategy)
+        self.total_individuals += 1
+        return individual
+
+    def reproduce(self, parents, nonparents, **kwargs):
+        parents_scrambled = np.random.permutation(parents)
+        children = [self.create_individual(parent=p, **kwargs) for p in parents_scrambled]
+        self.cohort = np.concatenate((parents, children, nonparents))
 
     def extinction(self, losers, save_memory=True):
         if save_memory:
             for lsr in losers:
-                self.cohort[lsr].strategy = None
-        self.graveyard = np.concatenate((self.graveyard, self.cohort[losers]))
-        self.cohort = np.delete(self.cohort, losers)
+                lsr.strategy = None
+        self.graveyard = np.concatenate((self.graveyard, losers))
+        self.cohort = self.cohort[np.logical_not(np.isin(self.cohort, losers))]
 
     def extract_data(self, feature, incl_dead=False, sort_by=None):
         cohort = self.cohort
@@ -98,10 +103,13 @@ class Population(TicketToRide):
 
 class Individual(TicketToRide):
 
-    def __init__(self, epoch=0, seed=dt.now().microsecond, **kwargs):
+    def __init__(self, id, epoch=0, parent=None, seed=dt.now().microsecond, **kwargs):
         super().__init__(**kwargs)
-        self.age = 0
+
+        self.id = id
+        self.parent = parent if parent is None else parent.id
         self.birthday = epoch
+        self.age = 0
         self.points = np.array([], dtype=np.int16)
         self.pieces_used = np.array([], dtype=np.int16)
         self.tracks = np.array([], dtype=np.int8)
