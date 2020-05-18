@@ -1,7 +1,5 @@
 from datetime import datetime as dt
 import logging
-import pickle
-import gzip
 from ticket import utils
 from ticket.population import Population
 
@@ -20,8 +18,7 @@ def main(new=True):
 
         logging.basicConfig(filename=utils.log_file, filemode='a', format='%(message)s', level=logging.WARNING)
         logging.critical('re-started at %s', str(dt.now()))
-        with gzip.open(utils.output_file, 'rb') as f:
-            population = pickle.load(f)
+        population = utils.read_population()
 
     population.go()
     population.save(save_memory=True)

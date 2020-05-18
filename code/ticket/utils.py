@@ -1,5 +1,6 @@
 import pickle
 import bz2
+import gzip
 import os
 from os.path import join
 
@@ -14,11 +15,16 @@ adjacency_file = join(data_location, 'adjacent.obj')
 masks_file = join(data_location, 'masks.obj')
 
 log_file = join(data_location, 'log.txt')
-_external = join(os.sep, 'Volumes', 'EGs WD')
-if os.path.exists(_external):
-    output_file = join(_external, 'data.obj')
-else:
-    output_file = join(data_location, 'data.obj')
+
+
+def get_output_file(filename=None):
+    if filename is not None:
+        return filename
+    _external = join(os.sep, 'Volumes', 'EGs WD')
+    if os.path.exists(_external):
+        return join(_external, 'data.obj')
+    else:
+        return join(data_location, 'data.obj')
 
 
 def read_adjacencies():
@@ -40,3 +46,9 @@ def read_masks():
 def extract_cluster_reps():
     _, number_of_cluster_reps = read_masks()
     return number_of_cluster_reps
+
+
+def read_population():
+    with gzip.open(get_output_file(), 'rb') as f:
+        print('reading from {}'.format(get_output_file()))
+        return pickle.load(f)

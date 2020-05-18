@@ -5,7 +5,6 @@ from networkx.algorithms import approximation as approx
 from datetime import datetime as dt
 from ticket.core import TicketToRide
 from ticket.board import Map
-from ticket import utils
 
 
 class Strategy(TicketToRide):
@@ -18,6 +17,7 @@ class Strategy(TicketToRide):
         self.reps = nx.diameter(blank_map.map) + 1
         self.weights = [[[] for _ in range(2)] for _ in range(self.reps + 1)]
         self.player_logical_index = None
+        self.prob_mutation = None
 
     def set_game_turn(self, game_turn):
         self.player_logical_index = np.arange(self.players) == game_turn  # changes every game
@@ -28,9 +28,10 @@ class Strategy(TicketToRide):
         self.weights = [[_rand_init(self.mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
         if parent is not None:
+            self.prob_mutation = self.rng.beta(self.mutation_beta_params[0], self.mutation_beta_params[1], size=(self.reps + 1, 2))
             for rep in range(self.reps + 1):
                 for ind in range(2):
-                    mutation_mask = self.rng.uniform(size=self.mask[rep][ind].shape) > self.rng.beta(self.mutation_beta_params[0], self.mutation_beta_params[1])
+                    mutation_mask = self.rng.uniform(size=self.mask[rep][ind].shape) > self.prob_mutation[rep,ind]
                     self.weights[rep][ind][mutation_mask] = parent.weights[rep][ind][mutation_mask]
 
     def init_inputs(self):

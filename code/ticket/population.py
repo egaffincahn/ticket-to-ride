@@ -56,7 +56,7 @@ class Population(TicketToRide):
             winners[s] = order[np.argmax(game.points), s]
             losers[s] = order[np.argmin(game.points), s]
             [self.cohort[order[turn, s]].add_experience(game, turn) for turn in range(players)]
-            logging.warning('game points: {}, id: {}, parent: {}, ages: {}'.format(game.points, [self.cohort[order[turn, s]].id for turn in range(players)], [self.cohort[order[turn, s]].parent for turn in range(players)], [self.cohort[order[turn, s]].age for turn in range(players)]))
+            logging.warning('game points: {}, id: {}, parent: {}, ages: {}'.format(game.points, [self.cohort[order[turn, s]].id_ for turn in range(players)], [self.cohort[order[turn, s]].parent for turn in range(players)], [self.cohort[order[turn, s]].age for turn in range(players)]))
         self.epoch += 1
         ties = winners == losers
         winners = winners[np.logical_not(ties)]
@@ -65,11 +65,12 @@ class Population(TicketToRide):
         return self.cohort[winners], self.cohort[losers], self.cohort[middlers]
 
     def create_individual(self, parent=None, **kwargs):
-        individual = Individual(id=self.total_individuals, epoch=self.epoch, parent=parent, **kwargs)
+        individual = Individual(id_=self.total_individuals, epoch=self.epoch, parent=parent, **kwargs)
         if parent is None:
             individual.strategy.init_weights()
         else:
             individual.strategy.init_weights(parent.strategy)
+            individual.prob_mutation = individual.strategy.prob_mutation
         self.total_individuals += 1
         return individual
 
@@ -99,17 +100,18 @@ class Population(TicketToRide):
         if save_memory:
             for individual in population.cohort:
                 individual.strategy.weights = None
-        with gzip.open(utils.output_file, 'wb') as f:
+        with gzip.open(utils.get_output_file(), 'wb') as f:
+            print('writing to {}'.format(utils.get_output_file()))
             pickle.dump(population, f)
 
 
 class Individual(TicketToRide):
 
-    def __init__(self, id, epoch=0, parent=None, seed=dt.now().microsecond, **kwargs):
+    def __init__(self, id_, epoch=0, parent=None, seed=dt.now().microsecond, **kwargs):
         super().__init__(**kwargs)
 
-        self.id = id
-        self.parent = parent if parent is None else parent.id
+        self.id_ = id_
+        self.parent = parent if parent is None else parent.id_
         self.birthday = epoch
         self.age = 0
         self.points = np.array([], dtype=np.int16)
