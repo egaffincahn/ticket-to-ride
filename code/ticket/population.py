@@ -33,7 +33,7 @@ class Population(TicketToRide):
         self.graveyard = []
         self.cohort = np.array([self.create_individual(**kwargs) for _ in range(self.individuals)])
 
-    def go(self, generations=None):
+    def go(self, generations=None, **kwargs):
         if generations is None:
             generations = self.generations
         while self.epoch < generations:
@@ -41,12 +41,12 @@ class Population(TicketToRide):
             winners, losers, rest = self.run_generation()
             self.extinction(losers)  # only losers die
             if self.epoch < self.generations:
-                self.reproduce(winners, rest)  # only winners reproduce
+                self.reproduce(winners, rest, **kwargs)  # only winners reproduce
 
     def run_generation(self):
         players = self.players
         sets = np.int16(self.individuals / players)
-        order = np.random.permutation(self.individuals).reshape(players, sets)
+        order = self.rng.permutation(self.individuals).reshape(players, sets)
         winners = np.empty(sets, dtype=np.int16)
         losers = np.empty(sets, dtype=np.int16)
         logging.info('generation %d', self.epoch)
@@ -75,7 +75,7 @@ class Population(TicketToRide):
         return individual
 
     def reproduce(self, parents, nonparents, **kwargs):
-        parents_scrambled = np.random.permutation(parents)
+        parents_scrambled = self.rng.permutation(parents)
         children = [self.create_individual(parent=p, **kwargs) for p in parents_scrambled]
         self.cohort = np.concatenate((parents, children, nonparents))
 
@@ -107,7 +107,7 @@ class Population(TicketToRide):
 
 class Individual(TicketToRide):
 
-    def __init__(self, id_, epoch=0, parent=None, seed=dt.now().microsecond, **kwargs):
+    def __init__(self, id_, epoch=0, parent=None, **kwargs):
         super().__init__(**kwargs)
 
         self.id_ = id_
@@ -119,7 +119,8 @@ class Individual(TicketToRide):
         self.tracks = np.array([], dtype=np.int8)
         self.goals_taken = np.array([], dtype=np.int8)
         self.goals_completed = np.array([], dtype=np.int8)
-        self.strategy = Strategy(seed=seed, **kwargs)
+        self.rng_state = self.rng.bit_generator.state
+        self.strategy = Strategy(**kwargs)
 
     def add_experience(self, game, turn):
         self.age += 1

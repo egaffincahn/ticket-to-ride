@@ -28,11 +28,11 @@ class Cards(TicketToRide):
 
     def shuffle_deck(self):
         logging.debug('shuffling deck')
-        np.random.shuffle(self.resources['deck'])
+        self.rng.shuffle(self.resources['deck'])
 
     def shuffle_goals(self):
         logging.debug('shuffling goal cards')
-        self.goals['deck'] = self.goals['deck'].sample(frac=1)
+        self.goals['deck'] = self.goals_init.iloc[self.rng.permutation(self.NUM_GOALS),:]
 
     def init_faceup(self, number=5):
         logging.debug('placing %d faceup cards, %d in deck and %d in discards', number, len(self.resources['deck']),

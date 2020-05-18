@@ -2,16 +2,14 @@ import numpy as np
 import networkx as nx
 import logging
 from networkx.algorithms import approximation as approx
-from datetime import datetime as dt
 from ticket.core import TicketToRide
 from ticket.board import Map
 
 
 class Strategy(TicketToRide):
 
-    def __init__(self, seed=dt.now().microsecond, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.rng = np.random.default_rng(seed=seed)
         self.inputs, self.input_indices = self.init_inputs()
         blank_map = Map(**kwargs)
         self.reps = nx.diameter(blank_map.map) + 1

@@ -1,4 +1,5 @@
 import pandas as pd
+from numpy import random as rd
 from ticket import utils
 
 
@@ -16,12 +17,14 @@ class TicketToRide:
 
     mask, _number_of_cluster_reps_tmp = utils.read_masks()  # only want to read in once
 
+    rng = rd.default_rng(seed=0)  # assume start with same seed
+
     def __init__(self, **kwargs):
 
         # defaults
         self.players = 3
-        self.data_location = utils.data_location
         self.mutation_beta_params = [2, 200]
+        self.random_seed = False
 
         # update defaults
         for key in kwargs:
@@ -29,6 +32,9 @@ class TicketToRide:
 
         if 'number_of_cluster_reps' in kwargs and self._number_of_cluster_reps_tmp != self.number_of_cluster_reps:
             raise self.Error('Incorrect number_of_cluster_reps, re-run write_masks()')
+
+        if self.random_seed:
+            self.rng = rd.default_rng()
 
     class Error(Exception):
 

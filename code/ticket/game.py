@@ -44,12 +44,10 @@ class Game(TicketToRide):
             self.next_turn()
 
         logging.debug('played %d rounds', self.round)
-
         logging.debug('points for tracks: %s', self.points.__str__())
 
         self.add_longest_road()
         self.add_goal_points()
-
         winner = np.argmax(self.points)
 
         logging.debug('pieces at end: %s', self.pieces.__str__())
@@ -105,7 +103,7 @@ class Game(TicketToRide):
                     cards_taken += 1  # when take rainbow, as if taken 2 cards
                 self.cards.pick_faceup(turn, action_index)
                 [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
-            elif move == 'deck':  # random card from deck
+            elif move == 'deck':  # top card from deck
                 cards_taken += 1
                 self.cards.pick_deck(turn)
                 [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
@@ -222,7 +220,7 @@ class Game(TicketToRide):
                 possible_colors = [c for c in np.arange(1, self.NUM_COLORS, 1) if
                                    hand_colors[c] + num_rainbow >= edge_length]
                 num_rainbow += 1
-            edge_color = np.random.choice(possible_colors)
+            edge_color = self.rng.choice(possible_colors)
         possible_indices = [ind for ind, val in enumerate(self.cards.resources['hands'][turn]) if val == edge_color]
         possible_indices.extend([ind for ind, val in enumerate(self.cards.resources['hands'][turn]) if val == 0])
         indices = possible_indices[:edge_length]
