@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 from numpy import random as rd
 from ticket import utils
@@ -38,7 +39,6 @@ class TicketToRide:
 
     class Error(Exception):
 
-        def __init__(self, *args):
-            self.message = None
-            if args:
-                self.message = args[0]
+        def __init__(self, message='unspecified'):
+            logging.critical('TicketToRide error: ' + message)
+            self.message = message

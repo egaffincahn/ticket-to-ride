@@ -9,7 +9,7 @@ def main(new=True):
     if new:
 
         logging.basicConfig(filename=utils.log_file, filemode='w', format='%(message)s', level=logging.WARNING)
-        logging.critical('started at %s', str(dt.now()))
+        logging.critical('started at {}'.format(str(dt.now())))
 
         population = Population(generations=1, individuals=3)
         # population = Population(generations=1, individuals=30)
@@ -17,13 +17,13 @@ def main(new=True):
     else:
 
         logging.basicConfig(filename=utils.log_file, filemode='a', format='%(message)s', level=logging.WARNING)
-        logging.critical('re-started at %s', str(dt.now()))
+        logging.critical('re-started at {}'.format(str(dt.now())))
         population = utils.read_population()
 
     population.go()
-    population.save(save_memory=True)
+    population.save(reduce_file_size=True)
 
-    logging.critical('finished at %s', str(dt.now()))
+    logging.critical('finished at {}'.format(str(dt.now())))
     print('finished')
 
 

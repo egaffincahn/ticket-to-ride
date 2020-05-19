@@ -35,8 +35,8 @@ class Cards(TicketToRide):
         self.goals['deck'] = self.goals_init.iloc[self.rng.permutation(self.NUM_GOALS),:]
 
     def init_faceup(self, number=5):
-        logging.debug('placing %d faceup cards, %d in deck and %d in discards', number, len(self.resources['deck']),
-                      len(self.resources['discards']))
+        logging.debug('placing {} faceup cards, {} in deck and {} in discards'.format(number, len(self.resources['deck']),
+                      len(self.resources['discards'])))
         self.resources['faceup'] = self.resources['deck'][0:number]
         self.resources['deck'] = self.resources['deck'][number:]
         self.cards_check()
@@ -53,8 +53,8 @@ class Cards(TicketToRide):
             self.resources['discards'].extend(self.resources['faceup'])
             self.resources['faceup'] = []
         if len(self.resources['deck']) < 5:
-            logging.debug('deck has %d resources left, shuffling in %d discards', len(self.resources['deck']),
-                          len(self.resources['discards']))
+            logging.debug('deck has {} resources left, shuffling in {} discards'.format(len(self.resources['deck']),
+                          len(self.resources['discards'])))
             self.resources['deck'].extend(self.resources['discards'])
             self.resources['discards'].clear()
             self.shuffle_deck()
@@ -63,14 +63,14 @@ class Cards(TicketToRide):
             self.init_faceup(num_faceups_needed)
 
     def spend_card(self, turn, card_index):  # can be multiple cards, index goes up to length of hand
-        logging.debug('player %d spends resource index %d', turn, card_index)
+        logging.debug('player {} spends resource index {}'.format(turn, card_index))
         card = self.resources['hands'][turn][card_index]
         self.resources['discards'].extend([card])
         self.resources['hands'][turn].pop(card_index)
 
     def pick_faceup(self, turn, card_index):
         card = self.resources['faceup'][card_index]
-        logging.debug('player %d picks faceup index %d, color %d', turn, card_index, card)
+        logging.debug('player {} picks faceup index {}, color {}'.format(turn, card_index, card))
         self.resources['hands'][turn].append(card)
         self.resources['faceup'].pop(card_index)
         self.resources['faceup'].append(self.resources['deck'][0])
@@ -80,17 +80,17 @@ class Cards(TicketToRide):
     def pick_deck(self, turn):
         self.resources['hands'][turn].append(self.resources['deck'][0])
         self.resources['deck'].pop(0)
-        logging.debug('player %d picks from deck, %d resources in hand, %d in the deck', turn,
-                      len(self.resources['hands'][turn]), len(self.resources['deck']))
+        logging.debug('player {} picks from deck, {} resources in hand, {} in the deck'.format(turn,
+                      len(self.resources['hands'][turn]), len(self.resources['deck'])))
         self.cards_check()
 
     def pick_goal(self, turn):
         self.goals['hands'][turn] = self.goals['hands'][turn].append(self.goals['deck'].iloc[0, ])
         self.goals['deck'] = self.goals['deck'][1:]
-        logging.debug('player %d picks goal from %s to %s for %d points, %d goals in hand, %d in deck', turn,
+        logging.debug('player {} picks goal from {} to {} for {} points, {} goals in hand, {} in deck'.format(turn,
                       self.goals['hands'][turn].iloc[-1, 0], self.goals['hands'][turn].iloc[-1, 1],
                       self.goals['hands'][turn].iloc[-1, 2], len(self.goals['hands'][turn]),
-                      len(self.goals['deck']))
+                      len(self.goals['deck'])))
 
     def color_count(self, stack, **kwargs):
         if 'turn' in kwargs:

@@ -9,13 +9,16 @@ from ticket.board import Map, Cards
 
 class Game(TicketToRide):
 
-    def __init__(self, strategies=None, plot=False, **kwargs):
+    def __init__(self, individuals=None, plot=False, **kwargs):
         super().__init__(**kwargs)
         self.map = Map(**kwargs)
         self.cards = Cards(**kwargs)
-        if strategies is None:
-            strategies = [Strategy(**kwargs) for _ in range(self.players)]
-        self.strategies = strategies
+        if individuals is None:
+            self.strategies = [Strategy(**kwargs) for _ in range(self.players)]
+            self.individuals = [np.nan for _ in range(self.players)]
+        else:
+            self.strategies = [ind.strategy for ind in individuals]
+            self.individuals = individuals
         self.pieces = self.pieces_init * np.ones(self.players, dtype=np.int8)
         self.points = np.zeros(self.players, dtype=np.int16)
         self.turn = 0
@@ -25,6 +28,8 @@ class Game(TicketToRide):
 
     def play_game(self):
 
+        logging.info('starting game with individuals {}, parents {}'.format([ind.id_ for ind in self.individuals], [ind.parent for ind in self.individuals]))
+
         players = self.players
         self.cards.initialize_game()
 
@@ -33,26 +38,26 @@ class Game(TicketToRide):
             self.strategies[turn].update_inputs('all', self)
 
         while all([self.pieces[trn] > 2 for trn in range(players)]):
-            logging.debug('round %d, player %d', self.round, self.turn)
+            logging.debug('round {}, player {}'.format(self.round, self.turn))
             self.do_turn()
             self.next_turn()
             if len(self.cards.resources['faceup']) < 5:
                 raise self.Error('Fewer than 5 faceup cards found')
         for _ in range(players):
-            logging.debug('final round, player %d', self.turn)
+            logging.debug('final round, player {}'.format(self.turn))
             self.do_turn()
             self.next_turn()
 
-        logging.debug('played %d rounds', self.round)
-        logging.debug('points for tracks: %s', self.points.__str__())
+        logging.info('played {} rounds'.format(self.round))
+        logging.info('points for tracks: {}'.format(self.points))
 
         self.add_longest_road()
         self.add_goal_points()
         winner = np.argmax(self.points)
 
-        logging.debug('pieces at end: %s', self.pieces.__str__())
-        logging.debug('points at end: %s', self.points.__str__())
-        logging.debug('winner: %d', winner)
+        logging.info('pieces at end: {}'.format(self.pieces))
+        logging.info('points at end: {}'.format(self.points))
+        logging.info('winner: player {}, id {}'.format(winner, self.individuals[winner].id_))
 
         if self.plot:
             self.map.plot_graph(winner)
@@ -72,10 +77,10 @@ class Game(TicketToRide):
 
             if move is None:  # change strategy?
                 logging.info('No possible moves, skipping turn')
-                logging.info('round %d, player %d', self.round, turn)
-                logging.info('cards in hand: %d', len(self.cards.resources['hands'][turn]))
-                logging.info('colors of hand cards: %s', self.cards.color_count('hands', turn=turn).__str__())
-                logging.info('pieces remaining: %d', self.pieces[turn])
+                logging.info('round {}, player {}'.format(self.round, turn))
+                logging.info('cards in hand: {}'.format(len(self.cards.resources['hands'][turn])))
+                logging.info('colors of hand cards: {}'.format(self.cards.color_count('hands', turn=turn)))
+                logging.info('pieces remaining: {}'.format(self.pieces[turn]))
                 edges_short_enough = self.map.subset_edges(
                     feature='distance', value=self.pieces[turn], op=np.less_equal)
                 logging.info('tracks short enough for pieces remaining: ')
@@ -85,12 +90,12 @@ class Game(TicketToRide):
                     self.map.extract_feature([self.map.get_edge_index(e) for e in edges_short_enough], feature='turn'))
                 logging.info('...and the values of laying a track:')
                 logging.info(list(action_values['track']))
-                logging.info('cards in deck: %d', len(self.cards.resources['deck']))
-                logging.info('value of taking from deck: %s', action_values['deck'].__str__())
-                logging.info('values of taking from faceups: %s', action_values['faceup'].__str__())
-                logging.info('cards in discards: %d', len(self.cards.resources['discards']))
-                logging.info('goal cards remaining: %d', len(self.cards.goals['deck']))
-                logging.info('value of taking new goals: %s', action_values['goals'].__str__())
+                logging.info('cards in deck: {}'.format(len(self.cards.resources['deck'])))
+                logging.info('value of taking from deck: {}'.format(action_values['deck']))
+                logging.info('values of taking from faceups: {}'.format(action_values['faceup']))
+                logging.info('cards in discards: {}'.format(len(self.cards.resources['discards'])))
+                logging.info('goal cards remaining: {}'.format(len(self.cards.goals['deck'])))
+                logging.info('value of taking new goals: {}'.format(action_values['goals']))
                 finished = True
 
             if move == 'goals':
@@ -126,9 +131,9 @@ class Game(TicketToRide):
         turn = self.turn
         edge_name = self.map.get_edge_name(edge_index)
         edge_length = self.map.extract_feature(edge_index, 'distance')
-        logging.debug('player %d lays track from %s to %s with track length %d using cards %s', turn, edge_name[0],
+        logging.debug('player {} lays track from {} to {} with track length {} using cards {}'.format(turn, edge_name[0],
                       edge_name[1], edge_length,
-                      [self.cards.resources['hands'][turn][ind] for ind in hand_indices].__str__())
+                      [self.cards.resources['hands'][turn][ind] for ind in hand_indices]))
         hand_indices.sort(reverse=True)
         [self.cards.spend_card(turn, card) for card in hand_indices]
         self.cards.cards_check()
@@ -136,8 +141,8 @@ class Game(TicketToRide):
         self.points[turn] += self.distance_points[edge_length]
         self.pieces[turn] -= edge_length
         self.cards.cards_check()
-        logging.debug('player %d now has %d points, with %d pieces and %d resources remaining', turn,
-                      self.points[turn], self.pieces[turn], len(self.cards.resources['hands'][turn]))
+        logging.debug('player {} now has {} points, with {} pieces and {} resources remaining'.format(turn,
+                      self.points[turn], self.pieces[turn], len(self.cards.resources['hands'][turn])))
 
         # end lay_track
 
@@ -238,18 +243,18 @@ class Game(TicketToRide):
             goals = self.cards.goals['hands'][turn]
             for _, row in goals.iterrows():
                 if approx.local_node_connectivity(subgraph, row[0], row[1]) == 1:
-                    logging.debug('goal for player %d: from %s to %s, +%d', turn, row[0], row[1], row[2])
+                    logging.debug('goal for player {}: from {} to {}, +{}'.format(turn, row[0], row[1], row[2]))
                     points[turn] += row[2]
                     self.goals_completed[turn] += 1
                 else:
-                    logging.debug('goal for player %d: from %s to %s, -%d', turn, row[0], row[1], row[2])
+                    logging.debug('goal for player {}: from {} to {}, -{}'.format(turn, row[0], row[1], row[2]))
                     points[turn] -= row[2]
-        logging.debug('goal points: %s', points.__str__())
+        logging.info('goal points: {}'.format(points))
         self.points += points
 
     def add_longest_road(self):
-        # logging.debug('player %d wins longest road (+10)', longest_road_winner)
-        logging.debug('...not adding longest road...')
+        # logging.info('player {} wins longest road (+10)'.format(longest_road_winner))
+        logging.info('...not adding longest road...')
         winner = np.zeros(3, dtype=np.bool)
         self.points[winner] += 10
 

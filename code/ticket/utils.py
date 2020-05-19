@@ -1,3 +1,4 @@
+import logging
 import pickle
 import bz2
 import gzip
@@ -50,5 +51,5 @@ def extract_cluster_reps():
 
 def read_population():
     with gzip.open(get_output_file(), 'rb') as f:
-        print('reading from {}'.format(get_output_file()))
+        logging.critical('reading from {}'.format(get_output_file()))
         return pickle.load(f)

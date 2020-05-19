@@ -8,7 +8,7 @@ from ticket.board import Map
 
 class Strategy(TicketToRide):
 
-    def __init__(self, **kwargs):
+    def __init__(self, individual, **kwargs):
         super().__init__(**kwargs)
         self.inputs, self.input_indices = self.init_inputs()
         blank_map = Map(**kwargs)
@@ -16,13 +16,14 @@ class Strategy(TicketToRide):
         self.weights = [[[] for _ in range(2)] for _ in range(self.reps + 1)]
         self.player_logical_index = None
         self.prob_mutation = None
+        self.individual = individual
 
     def set_game_turn(self, game_turn):
         self.player_logical_index = np.arange(self.players) == game_turn  # changes every game
 
     def init_weights(self, parent=None):
 
-        logging.debug('Building strategy')
+        logging.debug('building strategy for individual {}'.format(self.individual.id_))
         self.weights = [[_rand_init(self.mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
         if parent is not None:
