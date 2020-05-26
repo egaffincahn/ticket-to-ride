@@ -36,10 +36,11 @@ class Strategy(TicketToRide):
         self.weights = [[_rand_init(self.mask[rep][ind], self.rng) for ind in range(2)] for rep in range(self.reps + 1)]
 
         if parent is not None:
-            self.prob_mutation = self.rng.beta(self.mutation_beta_params[0], self.mutation_beta_params[1], size=(self.reps + 1, 2))
+            self.prob_mutation = self.rng.beta(self.mutation_beta_params[0], self.mutation_beta_params[1],
+                                               size=(self.reps + 1, 2))
             for rep in range(self.reps + 1):
                 for ind in range(2):
-                    mutation_mask = self.rng.uniform(size=self.mask[rep][ind].shape) > self.prob_mutation[rep,ind]
+                    mutation_mask = self.rng.uniform(size=self.mask[rep][ind].shape) > self.prob_mutation[rep, ind]
                     self.weights[rep][ind][mutation_mask] = parent.weights[rep][ind][mutation_mask]
 
     def init_inputs(self):
@@ -157,15 +158,12 @@ def _catbias(x):
 
 
 def _rand_init(m, rng):
-    norms = m.sum(axis=1, dtype=np.int16)
+    norms = m.sum(axis=0, dtype=np.int16)
     w = np.zeros(m.shape, dtype=np.float32)
     w[m] = rng.uniform(-.5, .5, size=norms.sum()).astype(np.float32)
-    return (w.T / np.sqrt(norms)).T
+    return w / np.sqrt(norms)
 
 
 def _relu(x):
     return np.maximum(x, 0)
 
-
-def _lincomb(x, y, p):
-    return p * x + (1 - p) * y
