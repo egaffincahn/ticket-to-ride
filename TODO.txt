@@ -1,7 +1,4 @@
 **add longest road
 -make plotting prettier?
--improve logging: at a minimum, make a logger with just the metadata (time, which generation)
--don't want to load map stuff every time? how much time does it use
 -split output_file into the weights and the metadata (maybe cohort and everything else)
 -parallel computing
--no way to play a single game b/c needs class Individual

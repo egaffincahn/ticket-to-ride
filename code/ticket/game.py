@@ -9,16 +9,11 @@ from ticket.board import Map, Cards
 
 class Game(TicketToRide):
 
-    def __init__(self, individuals=None, plot=False, **kwargs):
+    def __init__(self, individuals, plot=False, **kwargs):
         super().__init__(**kwargs)
         self.map = Map(**kwargs)
         self.cards = Cards(**kwargs)
-        if individuals is None:
-            self.strategies = [Strategy(**kwargs) for _ in range(self.players)]
-            self.individuals = [np.nan for _ in range(self.players)]
-        else:
-            self.strategies = [ind.strategy for ind in individuals]
-            self.individuals = individuals
+        self.individuals = individuals
         self.pieces = self.pieces_init * np.ones(self.players, dtype=np.int8)
         self.points = np.zeros(self.players, dtype=np.int16)
         self.turn = 0
@@ -34,9 +29,9 @@ class Game(TicketToRide):
         self.cards.initialize_game()
 
         for turn in range(players):
-            self.strategies[turn].set_game_turn(turn)
-            self.strategies[turn].update_inputs('all', self)
-            action_values = self.strategies[turn].feedforward()
+            self.individuals[turn].strategy.set_game_turn(turn)
+            self.individuals[turn].strategy.update_inputs('all', self)
+            action_values = self.individuals[turn].strategy.feedforward()
             self.cards.pick_goals(turn, force_keep=2, action_values=action_values)
 
         while all([self.pieces[trn] > 2 for trn in range(players)]):
@@ -68,7 +63,7 @@ class Game(TicketToRide):
 
     def do_turn(self):
         turn = self.turn
-        player_strategy = self.strategies[turn]
+        player_strategy = self.individuals[turn].strategy
         finished = False
         cards_taken = 0
         while not finished:
@@ -100,26 +95,26 @@ class Game(TicketToRide):
                 logging.info('value of taking new goals: {}'.format(action_values['goals_take']))
                 finished = True
 
-            if move == 'goals':
+            if move == 'goals_take':
                 self.cards.pick_goals(turn, force_keep=1, action_values=action_values)
-                self.strategies[turn].update_inputs('goals', self)
+                self.individuals[turn].strategy.update_inputs('goals', self)
                 finished = True
             elif move == 'faceup':
                 cards_taken += 1
                 if action_index == 0:
                     cards_taken += 1  # when take rainbow, as if taken 2 cards
                 self.cards.pick_faceup(turn, action_index)
-                [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
+                [self.individuals[trn].strategy.update_inputs('resources', self) for trn in range(self.players)]
             elif move == 'deck':  # top card from deck
                 cards_taken += 1
                 self.cards.pick_deck(turn)
-                [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
+                [self.individuals[trn].strategy.update_inputs('resources', self) for trn in range(self.players)]
             elif move == 'track':  # laying track
                 hand_indices = self.choose_resources(turn, action_index)
                 self.lay_track(hand_indices, action_index)
-                [self.strategies[trn].update_inputs('edges', self) for trn in range(self.players)]
-                [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
-                self.strategies[turn].update_inputs('goals', self)
+                [self.individuals[trn].strategy.update_inputs('edges', self) for trn in range(self.players)]
+                [self.individuals[trn].strategy.update_inputs('resources', self) for trn in range(self.players)]
+                self.individuals[turn].strategy.update_inputs('goals', self)
                 finished = True
             else:
                 logging.info('No move')
