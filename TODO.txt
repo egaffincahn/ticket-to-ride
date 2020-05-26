@@ -1,8 +1,7 @@
 **add longest road
-*currently can draw (and keep) exactly 2 goal cards, instead of 3 and being able to choose : maybe instead of single goal output, make one goal output for each goal card
 -make plotting prettier?
 -improve logging: at a minimum, make a logger with just the metadata (time, which generation)
 -don't want to load map stuff every time? how much time does it use
--mask for random weight initialization?
 -split output_file into the weights and the metadata (maybe cohort and everything else)
 -parallel computing
+-no way to play a single game b/c needs class Individual

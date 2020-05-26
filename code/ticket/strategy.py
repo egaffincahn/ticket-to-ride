@@ -18,6 +18,15 @@ class Strategy(TicketToRide):
         self.prob_mutation = None
         self.individual = individual
 
+        self.action_indices = dict(
+            track=np.arange(self.NUM_EDGES),
+            goals_take=self.NUM_EDGES,
+            goals_threshold=self.NUM_EDGES + 1,
+            goals_each=self.NUM_EDGES + 2 + np.arange(self.NUM_GOALS),
+            deck=self.NUM_EDGES + self.NUM_GOALS + 2,
+            faceup=self.NUM_EDGES + self.NUM_GOALS + 3 + np.arange(self.NUM_COLORS)
+        )
+
     def set_game_turn(self, game_turn):
         self.player_logical_index = np.arange(self.players) == game_turn  # changes every game
 
@@ -104,12 +113,15 @@ class Strategy(TicketToRide):
                 y = _catbias(y)
             y = np.tanh(np.matmul(y, self.weights[rep][0]))  # onto 4 superclusters (final layer: just Edges, Colors)
             y = _relu(np.matmul(_catbias(y), self.weights[rep][1]))  # onto Edges (final layer: output valuation)
-        action_values = {
-            'track': list(y[range(self.NUM_EDGES)]),
-            'goals': [y[self.NUM_EDGES]],
-            'deck': [y[self.NUM_EDGES + 1]],
-            'faceup': list(y[-5:])
-        }
+        action_values = dict(
+            track=list(y[self.action_indices['track']]),
+            goals_take=y[self.action_indices['goals_take']],
+            goals_threshold=y[self.action_indices['goals_threshold']],
+            goals_each=np.array(y[self.action_indices['goals_each']]),
+            deck=y[self.action_indices['deck']],
+            faceup=np.array(y[self.action_indices['faceup']]),
+        )
+
         if not isinstance(y[0], np.float32):
             raise self.Error('output is not float32')
 

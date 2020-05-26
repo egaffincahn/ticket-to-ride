@@ -36,6 +36,8 @@ class Game(TicketToRide):
         for turn in range(players):
             self.strategies[turn].set_game_turn(turn)
             self.strategies[turn].update_inputs('all', self)
+            action_values = self.strategies[turn].feedforward()
+            self.cards.pick_goals(turn, force_keep=2, action_values=action_values)
 
         while all([self.pieces[trn] > 2 for trn in range(players)]):
             logging.debug('round {}, player {}'.format(self.round, self.turn))
@@ -95,16 +97,16 @@ class Game(TicketToRide):
                 logging.info('values of taking from faceups: {}'.format(action_values['faceup']))
                 logging.info('cards in discards: {}'.format(len(self.cards.resources['discards'])))
                 logging.info('goal cards remaining: {}'.format(len(self.cards.goals['deck'])))
-                logging.info('value of taking new goals: {}'.format(action_values['goals']))
+                logging.info('value of taking new goals: {}'.format(action_values['goals_take']))
                 finished = True
 
             if move == 'goals':
-                [self.cards.pick_goal(turn) for _ in range(3)]
+                self.cards.pick_goals(turn, force_keep=1, action_values=action_values)
                 self.strategies[turn].update_inputs('goals', self)
                 finished = True
             elif move == 'faceup':
                 cards_taken += 1
-                if self.cards.resources['faceup'][action_index] == 0:
+                if action_index == 0:
                     cards_taken += 1  # when take rainbow, as if taken 2 cards
                 self.cards.pick_faceup(turn, action_index)
                 [self.strategies[trn].update_inputs('resources', self) for trn in range(self.players)]
@@ -151,11 +153,13 @@ class Game(TicketToRide):
         action_index = None
         move = None
         value = -np.inf
-        for k in list(action_values):
-            value_tmp = max(action_values[k])
+        for key, val in action_values.items():
+            if key == 'goals_threshold' or key == 'goals_each':
+                continue
+            value_tmp = np.max(val)
             if value_tmp > value:
-                move = k
-                action_index = np.argmax(action_values[k])
+                move = key
+                action_index = np.argmax(val)
                 value = value_tmp
         return move, action_index, value
 
@@ -165,27 +169,32 @@ class Game(TicketToRide):
 
         turn = self.turn
 
-        action_values = {
-            'goals': [-np.inf],
-            'faceup': [-np.inf for _ in range(5)],
-            'deck': [-np.inf],
-            'track': [-np.inf for _ in range(self.NUM_EDGES)]
-        }
+        action_values = dict(
+            track=[-np.inf for _ in range(self.NUM_EDGES)],
+            goals_take=[-np.inf],
+            goals_threshold=[-np.inf],
+            goals_each=np.array([-np.inf for _ in range(self.NUM_GOALS)]),
+            deck=[-np.inf],
+            faceup=[-np.inf for _ in range(self.NUM_COLORS)]
+        )
 
-        if cards_taken > 0:  # then required to take a second card, set all other values to 0
+        if len(self.cards.resources['faceup']) != 5:
+            raise self.Error('incorrect number of faceup cards')
+
+        enough_cards = (cards_taken + len(self.cards.resources['deck']) + len(self.cards.resources['discards'])) >= 2
+        if enough_cards:
             action_values['deck'] = action_values_init['deck']
-            for ind, val in enumerate(self.cards.resources['faceup']):
-                if val > 0:
-                    action_values['faceup'][ind] = action_values_init['faceup'][ind]
-            return action_values
+            faceup_colors = self.cards.color_count('faceup')
+            for c in range(self.NUM_COLORS):
+                if (cards_taken == 0 or c > 0) and (faceup_colors[c] > 0):
+                    action_values['faceup'][c] = action_values_init['faceup'][c]
+            if cards_taken > 0:
+                return action_values
 
-        if len(self.cards.resources['faceup']) >= 5 and (  # SHOULD JUST BE == ?
-                cards_taken + len(self.cards.resources['deck']) + len(self.cards.resources['discards']) >= 2):
-            action_values['deck'] = action_values_init['deck']
-            action_values['faceup'] = action_values_init['faceup']
-
-        if len(self.cards.goals['deck']) >= 3:
-            action_values['goals'] = action_values_init['goals']
+        if len(self.cards.goals['deck']) >= 1:
+            action_values['goals_take'] = action_values_init['goals_take']
+            action_values['goals_threshold'] = action_values_init['goals_threshold']
+            action_values['goals_each'] = action_values_init['goals_each']
 
         # possible edges where there aren't enough cards of the color, or already taken, or not enough pieces
         edges_unavailable = self.map.subset_edges(feature='turn', value=-1, op=np.not_equal, dtype=int)
@@ -243,12 +252,13 @@ class Game(TicketToRide):
             goals = self.cards.goals['hands'][turn]
             for _, row in goals.iterrows():
                 if approx.local_node_connectivity(subgraph, row[0], row[1]) == 1:
-                    logging.debug('goal for player {}: from {} to {}, +{}'.format(turn, row[0], row[1], row[2]))
+                    posneg = '+'
                     points[turn] += row[2]
                     self.goals_completed[turn] += 1
                 else:
-                    logging.debug('goal for player {}: from {} to {}, -{}'.format(turn, row[0], row[1], row[2]))
+                    posneg = '-'
                     points[turn] -= row[2]
+                logging.debug('goal for player {}: from {} to {}, {}{}'.format(turn, row[0], row[1], posneg, row[2]))
         logging.info('goal points: {}'.format(points))
         self.points += points
 

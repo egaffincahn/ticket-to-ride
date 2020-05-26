@@ -5,7 +5,9 @@ import bz2
 from itertools import product
 from ticket import utils
 from ticket.board import Map, Cards
-from ticket.strategy import Strategy, next_ind
+# from ticket.strategy import Strategy, next_ind
+from ticket.strategy import next_ind
+from ticket.population import Individual
 
 
 def write_adjacencies():
@@ -104,7 +106,9 @@ def write_masks(number_of_cluster_reps=25):
         return .03 * x + .09 * x ** 2
     print("Predicted size of masks.obj:", size_estimate(number_of_cluster_reps), "mb")
 
-    s = Strategy()
+    # s = Strategy()
+    individual = Individual()
+    s = individual.strategy
     s.blank_cards = Cards()
     s.blank_map = Map()
 
@@ -253,9 +257,9 @@ def write_masks(number_of_cluster_reps=25):
 
     M[rep + 1][0] = mask
 
-    # from edges, colors to edges, goals, deck, faceups
+    # from edges, colors to edges, goals+, deck, faceups
     nrow = ncol + 1
-    ncol = s.NUM_EDGES + 1 + 1 + 5
+    ncol = (s.NUM_EDGES) + (1 + 1 + s.NUM_GOALS) + (1) + (s.NUM_COLORS)
     mask = np.zeros((nrow, ncol), dtype=bool)
 
     mask[0,] = True  # bias
@@ -267,13 +271,25 @@ def write_masks(number_of_cluster_reps=25):
         col = e
         mask[row, col] = True
 
-        # onto goals
+        # onto goals (take)
         col = s.NUM_EDGES
         mask[row, col] = True
 
+        # onto goals (threshold)
+        col = s.NUM_EDGES + 1
+        mask[row, col] = True
+
+        # onto goals (each)
+        for g in range(s.NUM_GOALS):
+            for n in [0, 1]:
+                n_ = s.blank_map.get_node_index(s.blank_cards.goals_init.iloc[g, n])
+                if np.isin(n_, s.blank_map.get_adjacent_nodes(e)):
+                    col = n_ + s.NUM_EDGES + 2
+                    mask[row, col] = True
+
         # onto colors (skip deck)
         ind = s.blank_map.extract_feature(e, 'color')
-        col = s.NUM_EDGES + 2
+        col = s.NUM_EDGES + s.NUM_GOALS + 3 + ind
         mask[row, col] = True
 
     # from colors
@@ -284,12 +300,12 @@ def write_masks(number_of_cluster_reps=25):
         mask[expand(row, col)] = True
 
         # onto deck (skip goals)
-        col = s.NUM_EDGES + 1
+        col = s.NUM_EDGES + s.NUM_GOALS + 2
         mask[row, col] = True
 
         # onto faceups
-        col = np.arange(5) + s.NUM_EDGES + 2
-        mask[expand(row, col)] = True
+        col = s.NUM_EDGES + s.NUM_GOALS + 3 + c
+        mask[row, col] = True
 
     M[rep + 1][1] = mask
 

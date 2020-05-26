@@ -18,13 +18,18 @@ class Cards(TicketToRide):
             hands=[[] for _ in range(self.players)]
         )
         self.resources['deck'].extend([0, 0])  # 14 rainbows vs 12 of every other
-        self.goals = dict(deck=self.goals_init, hands=[pd.DataFrame(data={'from': [], 'to': [], 'value': []}) for _ in range(self.players)])
+        self.goals = dict(
+            deck=self.goals_init,
+            discards=[],
+            hands=[pd.DataFrame(data={'from': [], 'to': [], 'value': []}) for _ in range(self.players)]
+        )
 
     def initialize_game(self):
         self.shuffle_deck()
         self.shuffle_goals()
         self.init_faceup()
-        self.deal_out()
+        self.deal_resources()
+        # self.deal_out()
 
     def shuffle_deck(self):
         logging.debug('shuffling deck')
@@ -41,10 +46,9 @@ class Cards(TicketToRide):
         self.resources['deck'] = self.resources['deck'][number:]
         self.cards_check()
 
-    def deal_out(self):
-        logging.debug('dealing cards')
+    def deal_resources(self):
+        logging.debug('dealing resources')
         [self.pick_deck(turn) for _ in range(4) for turn in range(self.players)]
-        [self.pick_goal(turn) for _ in range(3) for turn in range(self.players)]
 
     def cards_check(self):
         if self.resources['faceup'].count(0) >= 3 and (
@@ -68,10 +72,10 @@ class Cards(TicketToRide):
         self.resources['discards'].extend([card])
         self.resources['hands'][turn].pop(card_index)
 
-    def pick_faceup(self, turn, card_index):
-        card = self.resources['faceup'][card_index]
-        logging.debug('player {} picks faceup index {}, color {}'.format(turn, card_index, card))
-        self.resources['hands'][turn].append(card)
+    def pick_faceup(self, turn, color):
+        card_index = self.resources['faceup'].index(color)
+        logging.debug('player {} picks faceup index {}, color {}'.format(turn, card_index, color))
+        self.resources['hands'][turn].append(color)
         self.resources['faceup'].pop(card_index)
         self.resources['faceup'].append(self.resources['deck'][0])
         self.resources['deck'].pop(0)
@@ -84,13 +88,27 @@ class Cards(TicketToRide):
                       len(self.resources['hands'][turn]), len(self.resources['deck'])))
         self.cards_check()
 
-    def pick_goal(self, turn):
-        self.goals['hands'][turn] = self.goals['hands'][turn].append(self.goals['deck'].iloc[0, ])
-        self.goals['deck'] = self.goals['deck'][1:]
-        logging.debug('player {} picks goal from {} to {} for {} points, {} goals in hand, {} in deck'.format(turn,
-                      self.goals['hands'][turn].iloc[-1, 0], self.goals['hands'][turn].iloc[-1, 1],
-                      self.goals['hands'][turn].iloc[-1, 2], len(self.goals['hands'][turn]),
-                      len(self.goals['deck'])))
+    def pick_goals(self, turn, force_keep, action_values):
+        drawn = []
+        for _ in range(3):  # draw 3
+            drawn.append(self.goals['deck'].iloc[0, ])
+            self.goals['deck'] = self.goals['deck'][1:]
+        ind = [g.name for g in drawn]
+        values = action_values['goals_each'][ind]
+        threshold = action_values['goals_threshold']
+        keep = []
+        while len(keep) < force_keep:
+            keep.append(drawn[np.argmax(values)])
+            values[np.argmax(values)] = -np.inf
+        keep.extend([drawn[i] for i in range(3) if values[i] > threshold])
+        for g in keep:
+            self.goals['hands'][turn] = self.goals['hands'][turn].append(g)  # pandas df append method returns the df
+            logging.debug('player {} keeps goal from {} to {} for {} points, {} goals in hand'.format(turn, g[0], g[1], g[2], len(self.goals['hands'][turn])))
+        for g in drawn:
+            keep_ind = [g_.name for g_ in keep]
+            if g.name not in keep_ind:
+                self.goals['discards'].append(g)
+                logging.debug('player {} discards goal from {} to {} for {} points'.format(turn, g[0], g[1], g[2]))
 
     def color_count(self, stack, **kwargs):
         if 'turn' in kwargs:
