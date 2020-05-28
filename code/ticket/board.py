@@ -246,10 +246,17 @@ class Map(TicketToRide):
             raise self.Error('Invalid type(edge) {}'.format(dtype_in))
         return edges
 
-    def create_player_subgraph(self, turn):
-        subgraph = nx.MultiGraph()
-        subgraph.add_nodes_from(self.nodes)
-        subgraph.add_edges_from(self.subset_edges(feature='turn', value=turn))
+    def create_player_subgraph(self, turn, multi=True, incl_nodes=True):
+        if multi:
+            subgraph = nx.MultiGraph()
+        else:
+            subgraph = nx.Graph()
+        if incl_nodes:
+            subgraph.add_nodes_from(self.nodes)
+        edges = self.subset_edges(feature='turn', value=turn)
+        if not multi:
+            edges = list(zip(*list(zip(*edges))[:2]))  # removes the parallel component
+        subgraph.add_edges_from(edges)
         return subgraph
 
     def lay_track(self, turn, edge_index):
