@@ -29,6 +29,7 @@ class Population(TicketToRide):
         if np.mod(self.individuals, self.players) > 0:
             raise self.Error('Number of individuals must be multiple of number of players')
 
+        self._order = None
         self.graveyard = []
         self.cohort = np.array([self.create_individual(**kwargs) for _ in range(self.individuals)])
 
@@ -45,23 +46,29 @@ class Population(TicketToRide):
         logging.warning('generation {}'.format(self.epoch))
         players = self.players
         sets = np.int16(self.individuals / players)
-        order = self.rng.permutation(self.individuals).reshape(players, sets)
+        self._order = self.rng.permutation(self.individuals).reshape(players, sets)
         winners = np.empty(sets, dtype=np.int16)
         losers = np.empty(sets, dtype=np.int16)
-
         for s in range(sets):
-            game = Game([self.cohort[order[turn, s]] for turn in range(players)])
-            game.play_game()
-            winners[s] = order[np.argmax(game.points), s]
-            losers[s] = order[np.argmin(game.points), s]
-            [self.cohort[order[turn, s]].add_experience(game, turn) for turn in range(players)]
-            logging.warning('game summary: points: {}, id: {}, parent: {}, ages: {}'.format(game.points, [self.cohort[order[turn, s]].id_ for turn in range(players)], [self.cohort[order[turn, s]].parent for turn in range(players)], [self.cohort[order[turn, s]].age for turn in range(players)]))
+            winners[s], losers[s] = self.play_game(s)
         self.epoch += 1
         ties = winners == losers
         winners = winners[np.logical_not(ties)]
         losers = losers[np.logical_not(ties)]
-        middlers = order[np.logical_not(np.isin(order, np.concatenate((winners, losers))))]  # neither winners nor losers
+        middlers = self._order[np.logical_not(np.isin(self._order, np.concatenate((winners, losers))))]
         return self.cohort[winners], self.cohort[losers], self.cohort[middlers]
+
+    def play_game(self, s):
+        game_individuals = [self.cohort[self._order[turn, s]] for turn in range(self.players)]
+        game = Game([self.cohort[self._order[turn, s]] for turn in range(self.players)])
+        game.play_game()
+        winner = self._order[np.argmax(game.points), s]
+        loser = self._order[np.argmin(game.points), s]
+        [self.cohort[self._order[turn, s]].add_experience(game, turn) for turn in range(self.players)]
+        logging.warning('game summary: points: {}, id: {}, parent: {}, ages: {}'.format(
+            game.points, [ind.id_ for ind in game_individuals], [ind.parent for ind in game_individuals],
+            [ind.age for ind in game_individuals]))
+        return winner, loser
 
     def create_individual(self, parent=None, **kwargs):
         id_ = self.total_individuals
