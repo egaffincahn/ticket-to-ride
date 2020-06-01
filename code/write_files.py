@@ -5,7 +5,6 @@ import bz2
 from itertools import product
 from ticket import utils
 from ticket.board import Map, Cards
-# from ticket.strategy import Strategy, next_ind
 from ticket.strategy import next_ind
 from ticket.population import Individual
 

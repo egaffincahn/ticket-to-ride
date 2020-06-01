@@ -8,7 +8,7 @@ def main(new=True):
 
     if new:
 
-        logging.basicConfig(filename=utils.log_file, filemode='w', format='%(message)s', level=logging.WARNING)
+        logging.basicConfig(filename=utils.log_file, filemode='w', format='%(message)s', level=logging.INFO)
         logging.critical('started at {}'.format(str(dt.now())))
 
         population = Population(generations=1, individuals=3)
