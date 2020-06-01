@@ -3,7 +3,6 @@ import logging
 from itertools import chain
 from networkx.algorithms import approximation as approx
 from ticket.core import TicketToRide
-from ticket.strategy import Strategy
 from ticket.board import Map, Cards
 
 
@@ -19,6 +18,7 @@ class Game(TicketToRide):
         self.turn = 0
         self.round = 0
         self.goals_completed = np.zeros(self.players, dtype=np.int8)
+        self.longest_track = np.zeros(self.players, dtype=np.int8)
         self.plot = plot
 
     def play_game(self):
@@ -48,7 +48,7 @@ class Game(TicketToRide):
         logging.info('played {} rounds'.format(self.round))
         logging.info('points for tracks: {}'.format(self.points))
 
-        self.add_longest_road()
+        self.add_longest_track()
         self.add_goal_points()
         winner = np.argmax(self.points)
 
@@ -240,7 +240,6 @@ class Game(TicketToRide):
         # end choose_resources
 
     def add_goal_points(self):
-
         points = np.zeros(self.players, dtype=np.int16)
         for turn in range(self.players):
             subgraph = self.map.create_player_subgraph(turn)
@@ -257,11 +256,19 @@ class Game(TicketToRide):
         logging.info('goal points: {}'.format(points))
         self.points += points
 
-    def add_longest_road(self):
-        # logging.info('player {} wins longest road (+10)'.format(longest_road_winner))
-        logging.info('...not adding longest road...')
-        winner = np.zeros(3, dtype=np.bool)
-        self.points[winner] += 10
+    def add_longest_track(self):
+        overall_best = self.map._compare_paths(players=self.players)
+        for turn in range(self.players):
+            G = self.map.create_player_subgraph(turn, multi=False, incl_nodes=True)
+            player_best = self.map.find_longest_path(G)
+            overall_best = self.map._compare_paths(old=overall_best, new=player_best)
+            self.longest_track[turn] = player_best['length']
+        points = np.zeros(self.players, dtype=np.int16)
+        points[overall_best['turn']] = 10  # ties go to both players
+        self.longest_track_winner = overall_best['turn']
+        self.longest_track_length = overall_best['length']
+        logging.info('player(s) {} wins longest road (+10) with {}-track path'.format(self.longest_track_winner, self.longest_track_length))
+        self.points += points
 
     def next_turn(self):
         self.turn += 1

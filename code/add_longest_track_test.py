@@ -2,7 +2,6 @@ from datetime import datetime as dt
 import numpy as np
 from ticket.population import Population
 from ticket.game import Game
-from add_longest_road import add_longest_road
 
 
 num_test = 0
@@ -17,11 +16,12 @@ def test(test_num, edges, expected_length, expected_points=[10, 0, 0], edges_=No
     if edges_ is not None:
         [game.map.lay_track(turn_, game.map.get_edge_index(e)) for e in edges_]
     tStart = dt.now()
-    length, points = add_longest_road(game)
+    game.add_longest_track()
     tFinish = dt.now()
-    if length != expected_length or np.any(np.not_equal(points, expected_points)):
+    if game.longest_track_length != expected_length or np.any(np.not_equal(game.points, expected_points)):
         game.map.plot_graph(turn)
-        raise Exception('failed test {}:\nexpected len {}, counted {}\nexpected pts {}, counted {}'.format(test_num, expected_length, length, expected_points, points))
+        raise Exception('failed test {}:\nexpected len {}, counted {}\nexpected pts {}, counted {}'.format(
+            test_num, expected_length, game.longest_track_length, expected_points, game.points))
     else:
         print('passed test {}: {}'.format(test_num, tFinish - tStart))
     return tFinish - tStart
