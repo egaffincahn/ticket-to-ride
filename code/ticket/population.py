@@ -112,7 +112,7 @@ class Population(TicketToRide):
 
 class Individual(TicketToRide):
 
-    def __init__(self, id_, epoch=0, parent=None, **kwargs):
+    def __init__(self, id_=None, epoch=0, parent=None, **kwargs):
         super().__init__(**kwargs)
 
         self.id_ = id_
@@ -122,6 +122,7 @@ class Individual(TicketToRide):
         self.points = np.array([], dtype=np.int16)
         self.pieces_used = np.array([], dtype=np.int16)
         self.tracks = np.array([], dtype=np.int8)
+        self.longest_track = np.array([], dtype=np.int8)
         self.goals_taken = np.array([], dtype=np.int8)
         self.goals_completed = np.array([], dtype=np.int8)
         self.rng_state = self.rng.bit_generator.state
@@ -132,5 +133,6 @@ class Individual(TicketToRide):
         self.points = np.concatenate((self.points, [game.points[turn]]))
         self.pieces_used = np.concatenate((self.pieces_used, [45 - game.pieces[turn]]))
         self.tracks = np.concatenate((self.tracks, [len(game.map.subset_edges('turn', turn))]))
+        self.longest_track = np.concatenate((self.longest_track, [game.longest_track[turn]]))
         self.goals_taken = np.concatenate((self.goals_taken, [game.cards.goals['hands'][turn].shape[0]]))
         self.goals_completed = np.concatenate((self.goals_completed, [game.goals_completed[turn]]))

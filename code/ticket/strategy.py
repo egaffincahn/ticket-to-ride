@@ -166,4 +166,3 @@ def _rand_init(m, rng):
 
 def _relu(x):
     return np.maximum(x, 0)
-

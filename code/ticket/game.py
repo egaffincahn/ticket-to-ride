@@ -20,10 +20,13 @@ class Game(TicketToRide):
         self.goals_completed = np.zeros(self.players, dtype=np.int8)
         self.longest_track = np.zeros(self.players, dtype=np.int8)
         self.plot = plot
+        self.longest_track_winner = None
+        self.longest_track_length = None
 
     def play_game(self):
 
-        logging.info('starting game with individuals {}, parents {}'.format([ind.id_ for ind in self.individuals], [ind.parent for ind in self.individuals]))
+        logging.info('starting game with individuals {}, parents {}'.format([ind.id_ for ind in self.individuals],
+                                                                            [ind.parent for ind in self.individuals]))
 
         players = self.players
         self.cards.initialize_game()
@@ -128,9 +131,9 @@ class Game(TicketToRide):
         turn = self.turn
         edge_name = self.map.get_edge_name(edge_index)
         edge_length = self.map.extract_feature(edge_index, 'distance')
-        logging.debug('player {} lays track from {} to {} with track length {} using cards {}'.format(turn, edge_name[0],
-                      edge_name[1], edge_length,
-                      [self.cards.resources['hands'][turn][ind] for ind in hand_indices]))
+        logging.debug('player {} lays track from {} to {} with track length {} using cards {}'.format(
+            turn, edge_name[0], edge_name[1], edge_length,
+            [self.cards.resources['hands'][turn][ind] for ind in hand_indices]))
         hand_indices.sort(reverse=True)
         [self.cards.spend_card(turn, card) for card in hand_indices]
         self.cards.cards_check()
@@ -210,6 +213,7 @@ class Game(TicketToRide):
                 edges = self.map.subset_edges(feature='color', value=c, dtype=int)
                 value = self.map.extract_feature(edges=edges, feature='distance')
                 not_enough_color[c] = [edges[e] for e, val in enumerate(value) if val > hand_colors[c] + hand_colors[0]]
+
         cannot_lay_track = self.map.unique(
             edges=list(chain(*[edges_unavailable, edges_not_short_enough, list(chain(*not_enough_color))])))
         for e in range(self.NUM_EDGES):
@@ -257,11 +261,11 @@ class Game(TicketToRide):
         self.points += points
 
     def add_longest_track(self):
-        overall_best = self.map._compare_paths(players=self.players)
+        overall_best = self.map.compare_paths(players=self.players)
         for turn in range(self.players):
             G = self.map.create_player_subgraph(turn, multi=False, incl_nodes=True)
             player_best = self.map.find_longest_path(G)
-            overall_best = self.map._compare_paths(old=overall_best, new=player_best)
+            overall_best = self.map.compare_paths(old=overall_best, new=player_best)
             self.longest_track[turn] = player_best['length']
         points = np.zeros(self.players, dtype=np.int16)
         points[overall_best['turn']] = 10  # ties go to both players

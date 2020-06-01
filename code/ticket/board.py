@@ -30,7 +30,6 @@ class Cards(TicketToRide):
         self.shuffle_goals()
         self.init_faceup()
         self.deal_resources()
-        # self.deal_out()
 
     def shuffle_deck(self):
         logging.debug('shuffling deck')
@@ -38,11 +37,11 @@ class Cards(TicketToRide):
 
     def shuffle_goals(self):
         logging.debug('shuffling goal cards')
-        self.goals['deck'] = self.goals_init.iloc[self.rng.permutation(self.NUM_GOALS),:]
+        self.goals['deck'] = self.goals_init.iloc[self.rng.permutation(self.NUM_GOALS), :]
 
     def init_faceup(self, number=5):
-        logging.debug('placing {} faceup cards, {} in deck and {} in discards'.format(number, len(self.resources['deck']),
-                      len(self.resources['discards'])))
+        logging.debug('placing {} faceup cards, {} in deck and {} in discards'.format(number,
+                      len(self.resources['deck']), len(self.resources['discards'])))
         self.resources['faceup'] = self.resources['deck'][0:number]
         self.resources['deck'] = self.resources['deck'][number:]
         self.cards_check()
@@ -104,7 +103,8 @@ class Cards(TicketToRide):
         keep.extend([drawn[i] for i in range(3) if values[i] > threshold])
         for g in keep:
             self.goals['hands'][turn] = self.goals['hands'][turn].append(g)  # pandas df append method returns the df
-            logging.debug('player {} keeps goal from {} to {} for {} points, {} goals in hand'.format(turn, g[0], g[1], g[2], len(self.goals['hands'][turn])))
+            logging.debug('player {} keeps goal from {} to {} for {} points, {} goals in hand'.format(
+                turn, g[0], g[1], g[2], len(self.goals['hands'][turn])))
         for g in drawn:
             keep_ind = [g_.name for g_ in keep]
             if g.name not in keep_ind:
@@ -321,7 +321,7 @@ class Map(TicketToRide):
         plt.show()
 
     @staticmethod
-    def _compare_paths(old=None, new=None, players=None):
+    def compare_paths(old=None, new=None, players=None):
         if old is None and new is None:  # initialize
             return dict(turn=np.arange(players), length=0)
         elif new['length'] > old['length']:
@@ -360,7 +360,7 @@ class Map(TicketToRide):
 
         def by_group(G, best):
             if best is None:
-                best = self._compare_paths(players=self.players)  # initialize
+                best = self.compare_paths(players=self.players)  # initialize
             groups = find_groups(G)
             if len(groups) == 0:
                 return best
@@ -389,7 +389,7 @@ class Map(TicketToRide):
             path_edges = []
             terminated = []  # list representing whether the path has been fully searched
             trim_adj_mat = []  # list of adjacency matrices that have edges removed
-            path_dists = []  # list for this player where each index is the length of a path, only updated once terminated
+            path_dists = []  # each index is the length of a path, only updated once terminated
 
             seeds = np.flatnonzero(
                 np.array(list(dict(G.degree).values())) % 2 == 1)  # only start with nodes of odd degree
@@ -398,7 +398,7 @@ class Map(TicketToRide):
 
             if sum(d % 2 == 1 for _, d in G.degree()) in (0, 2):  # check if semi-eulerian
                 new = dict(turn=np.array([G.turn]), length=sum_edges(G.edges))
-                return self._compare_paths(new=new, old=best)
+                return self.compare_paths(new=new, old=best)
 
             for n in seeds:  # n: seed
                 path_nodes.append([n])  # initialize a new path with the current city we start with
@@ -454,13 +454,10 @@ class Map(TicketToRide):
             new = dict(length=0)
             if len(path_nodes) > 0:
                 new = dict(turn=np.array([G.turn]), length=max(path_dists))
-            return self._compare_paths(new=new, old=best)
+            return self.compare_paths(new=new, old=best)
 
             # end DFS
 
         return by_group(G, best)
 
     # end class Map
-
-
-
