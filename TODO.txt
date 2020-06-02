@@ -1,3 +1,5 @@
+**help
 -make plotting prettier?
 -split output_file into the weights and the metadata (maybe cohort and everything else)
 -parallel computing
+-GUI to follow gameplay
