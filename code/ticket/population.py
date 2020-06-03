@@ -3,6 +3,8 @@ import logging
 import pickle
 import copy
 import gzip
+from itertools import chain
+from matplotlib import pyplot as plt
 from ticket.core import TicketToRide
 from ticket.strategy import Strategy
 from ticket.game import Game
@@ -64,7 +66,7 @@ class Population(TicketToRide):
         game.play_game()
         winner = self._order[np.argmax(game.points), s]
         loser = self._order[np.argmin(game.points), s]
-        [self.cohort[self._order[turn, s]].add_experience(game, turn) for turn in range(self.players)]
+        [self.cohort[self._order[turn, s]].add_experience(self.epoch, game, turn) for turn in range(self.players)]
         logging.warning('game summary: points: {}, id: {}, parent: {}, ages: {}'.format(
             game.points, [ind.id_ for ind in game_individuals], [ind.parent for ind in game_individuals],
             [ind.age for ind in game_individuals]))
@@ -97,14 +99,26 @@ class Population(TicketToRide):
         self.graveyard = np.concatenate((self.graveyard, losers))
         self.cohort = self.cohort[np.logical_not(np.isin(self.cohort, losers))]
 
-    def extract_data(self, feature, incl_dead=False, sort_by=None):
-        cohort = self.cohort
-        if incl_dead:
-            cohort = np.concatenate((self.graveyard, cohort))
-        if sort_by is not None:
-            cohort = sorted(cohort, key=lambda i: i.__getattribute__(sort_by))
-        values = [individual.__getattribute__(feature) for individual in cohort]
-        return values
+    def extract_data(self, feature, incl_dead=False, sort_by=None, summary=None):
+        def _extract(feature_):
+            cohort = self.cohort
+            if incl_dead:
+                cohort = np.concatenate((self.graveyard, cohort))
+            if sort_by is not None:
+                cohort = sorted(cohort, key=lambda i: i.__getattribute__(sort_by))
+            return [individual.__getattribute__(feature_) for individual in cohort]
+        values_tmp = _extract(feature_=feature)
+        epoch_tmp = _extract(feature_='epoch')
+
+        if summary is None:
+            epoch = epoch_tmp
+            values = values_tmp
+        else:
+            epoch_flat = np.concatenate(epoch_tmp)
+            values_flat = np.concatenate(values_tmp)
+            epoch = np.unique(epoch_flat)
+            values = np.array(list(map(lambda x: summary(values_flat[epoch_flat == x]), epoch)))
+        return epoch, values
 
     def save(self, reduce_file_size=True):
         population = copy.deepcopy(self)
@@ -116,6 +130,32 @@ class Population(TicketToRide):
             logging.critical('writing to {}'.format(utils.get_output_file()))
             pickle.dump(population, f)
 
+    def plot_feature(self, feature, jitter_frac=None, **kwargs):
+
+        def jitter(x_, frac=jitter_frac):
+            return [ind + self.rng.uniform(high=frac/2, low=-frac/2, size=ind.shape) for ind in iter(x_)]
+
+        epoch, plotting_data = self.extract_data(feature=feature, **kwargs)
+
+        if jitter_frac is None:
+            jitter_frac = 0
+            if isinstance(plotting_data, list):
+                unlisted = list(chain(*plotting_data))
+            else:
+                unlisted = plotting_data
+            if len(np.unique(unlisted)) / len(unlisted) < .1:
+                jitter_frac = .1
+
+        if 'summary' in kwargs and kwargs['summary'] is not None:
+            plt.plot(epoch, jitter(plotting_data, frac=jitter_frac))
+        else:
+            for x, y in zip(epoch, jitter(plotting_data, frac=jitter_frac)):
+                plt.plot(x, y)
+
+        plt.xlabel('Epoch')
+        plt.ylabel(feature)
+        plt.show()
+
 
 class Individual(TicketToRide):
 
@@ -126,6 +166,7 @@ class Individual(TicketToRide):
         self.parent = parent if parent is None else parent.id_
         self.birthday = epoch
         self.age = 0
+        self.epoch = np.array([], dtype=np.int32)
         self.points = np.array([], dtype=np.int16)
         self.pieces_used = np.array([], dtype=np.int16)
         self.tracks = np.array([], dtype=np.int8)
@@ -135,8 +176,9 @@ class Individual(TicketToRide):
         self.rng_state = self.rng.bit_generator.state
         self.strategy = Strategy(self, **kwargs)
 
-    def add_experience(self, game, turn):
+    def add_experience(self, epoch, game, turn):
         self.age += 1
+        self.epoch = np.concatenate((self.epoch, [epoch]))
         self.points = np.concatenate((self.points, [game.points[turn]]))
         self.pieces_used = np.concatenate((self.pieces_used, [45 - game.pieces[turn]]))
         self.tracks = np.concatenate((self.tracks, [len(game.map.subset_edges('turn', turn))]))
