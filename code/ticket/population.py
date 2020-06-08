@@ -166,6 +166,7 @@ class Individual(TicketToRide):
         self.parent = parent if parent is None else parent.id_
         self.birthday = epoch
         self.age = 0
+        self.instantaneous_age = np.array([], dtype=np.int16)
         self.epoch = np.array([], dtype=np.int32)
         self.points = np.array([], dtype=np.int16)
         self.pieces_used = np.array([], dtype=np.int16)
@@ -178,6 +179,7 @@ class Individual(TicketToRide):
 
     def add_experience(self, epoch, game, turn):
         self.age += 1
+        self.instantaneous_age = np.concatenate((self.instantaneous_age, [self.age]))
         self.epoch = np.concatenate((self.epoch, [epoch]))
         self.points = np.concatenate((self.points, [game.points[turn]]))
         self.pieces_used = np.concatenate((self.pieces_used, [45 - game.pieces[turn]]))
