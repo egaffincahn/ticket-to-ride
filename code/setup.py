@@ -4,7 +4,7 @@ from ticket import utils
 from ticket.population import Population
 
 
-def main(new=True):
+def main(new=True, save_weights=False):
 
     filemode = 'w' if new else 'a'
 
@@ -20,14 +20,17 @@ def main(new=True):
 
         logging.critical('re-started')
         population = utils.read_population()
+        if any([ind.strategy.weights is None for ind in population.cohort]):
+            raise population.Error('did not save weights previously')
 
-    population.go()
-    population.save(reduce_file_size=True)
+    population.go(generations=2)
+    population.save(reduce_file_size=not save_weights)
 
-    logging.critical('finished at {}'.format(str(dt.now())))
+    logging.critical('finished')
     print('finished')
 
 
 if __name__ == '__main__':
-    new = input('Load previous? (y/n) ') == 'n'
-    main(new=new)
+    new = input('Start new process? (y/n) ') == 'y'
+    save_weights = input('Save weights? (y/n) ') == 'y'
+    main(new=new, save_weights=save_weights)
