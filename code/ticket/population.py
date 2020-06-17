@@ -113,11 +113,13 @@ class Population(TicketToRide):
         if summary is None:
             epoch = epoch_tmp
             values = values_tmp
-        else:
+        elif is_nested(values_tmp):
             epoch_flat = np.concatenate(epoch_tmp)
             values_flat = np.concatenate(values_tmp)
             epoch = np.unique(epoch_flat)
             values = np.array(list(map(lambda x: summary(values_flat[epoch_flat == x]), epoch)))
+        else:
+            raise self.Error('"{}" feature cannot be used with summary statistic'.format(feature))
         return epoch, values
 
     def save(self, reduce_file_size=True):
@@ -133,13 +135,16 @@ class Population(TicketToRide):
     def plot_feature(self, feature, jitter_frac=None, **kwargs):
 
         def jitter(x_, frac=jitter_frac):
-            return [ind + self.rng.uniform(high=frac/2, low=-frac/2, size=ind.shape) for ind in iter(x_)]
+            if is_nested(x_):
+                return [ind + self.rng.uniform(high=frac/2, low=-frac/2, size=ind.shape) for ind in iter(x_)]
+            else:
+                return x_ + self.rng.uniform(high=frac / 2, low=-frac / 2, size=np.array(x_).shape)
 
         epoch, plotting_data = self.extract_data(feature=feature, **kwargs)
 
         if jitter_frac is None:
             jitter_frac = 0
-            if isinstance(plotting_data, list):
+            if is_nested(plotting_data):
                 unlisted = list(chain(*plotting_data))
             else:
                 unlisted = plotting_data
@@ -187,3 +192,14 @@ class Individual(TicketToRide):
         self.longest_track = np.concatenate((self.longest_track, [game.longest_track[turn]]))
         self.goals_taken = np.concatenate((self.goals_taken, [game.cards.goals['hands'][turn].shape[0]]))
         self.goals_completed = np.concatenate((self.goals_completed, [game.goals_completed[turn]]))
+
+
+def is_nested(x):
+    def is_list(x_):
+        return isinstance(x_, list) or isinstance(x_, np.ndarray)
+    if not is_list(x):
+        return False
+    are_nested = [is_list(x_) for x_ in x]
+    if not np.any(are_nested):
+        return False
+    return True
