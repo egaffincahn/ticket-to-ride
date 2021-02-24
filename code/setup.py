@@ -23,7 +23,8 @@ def main(new=True, save_weights=False):
         if any([ind.strategy.weights is None for ind in population.cohort]):
             raise population.Error('did not save weights previously')
 
-    population.go(generations=2)
+    # population.go(generations=5000)
+    population.go()
     population.save(reduce_file_size=not save_weights)
 
     logging.critical('finished')

@@ -38,10 +38,12 @@ class Population(TicketToRide):
     def go(self, generations=None, **kwargs):
         if generations is None:
             generations = self.generations
+        else:
+            self.generations = generations
         while self.epoch < generations:
             winners, losers, rest = self.run_generation()
             self.extinction(losers)  # only losers die
-            if self.epoch < self.generations:
+            if self.epoch < generations:
                 self.reproduce(winners, rest, **kwargs)  # only winners reproduce
 
     def run_generation(self):
